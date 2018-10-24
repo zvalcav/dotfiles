@@ -1,0 +1,9 @@
+#!/bin/bash
+#find /usr/share/apache-tomcat-8.0.35/webapps/ROOT/logos -mindepth 2 -maxdepth 2 -type d -name "fulltext" > /root/scripty/subdirectory.list
+find /opt -mindepth 2 -maxdepth 2 -type d -name "fulltext" > /root/scripty/subdirectory.list
+
+while read line
+do
+#	find "$line" -type f -print
+	find "$line" -type f -exec rm -v {} \;
+done < /root/scripty/subdirectory.list

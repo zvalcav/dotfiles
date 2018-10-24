@@ -1,0 +1,11 @@
+#!/bin/bash
+if [ -n "$1" ]
+then
+	echo "restarting $1"
+	service "$1" restart
+	sleep 1
+	echo "status $1"
+	service "$1" status
+else
+	echo "je potreba zadat nazev sluzby do parametru"
+fi

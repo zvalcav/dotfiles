@@ -1,0 +1,10 @@
+#!/bin/bash
+if [ -n "$1" ]
+then
+	echo "disabling $1"
+	chkconfig "$1" off
+	echo "listing $1 state"
+	chkconfig "$1" --list
+else
+	echo "je potreba zadat nazev sluzby do parametru"
+fi

@@ -1,0 +1,16 @@
+/var/log/scripty*.log {
+	copytruncate
+	weekly
+	compress
+	missingok
+	rotate 4
+}	
+
+/usr/local/spamassassin/spamfilter.log {
+	copytruncate
+	weekly
+	size 1000k
+	compress
+	missingok
+	rotate 4
+}

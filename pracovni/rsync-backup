@@ -1,0 +1,399 @@
+#!/bin/bash
+#rsync-backup - provadi zalohovani serveru, na zaklade konfigurace se urcuje, jak bude pracovat. 
+#nfspull,nfspush,local (cifs nebere v uvahu, protoze mrsi prava a nazvy souboru), lze take v configu
+#urcit, zda se budou delat hardlinkove snapshoty, nebo ne
+
+#LIST _PROMENNE _EXITY _LOGOVANI _KONFIGURACE _PODMINKY #_TMP-VAR #_ZALOHA
+
+#_PROMENNE
+#promenne se nastavuji v $config souboru, ktery se nacte, pokud existuje
+
+#promenne, ktere by se moc menit nemely, ale ve vysledku je to burt
+scriptName="rsync-backup"
+defaultList="/root /usr/local /var/backup /home/opravneni.acl"
+
+#dnesni datum ve formatu YYYY-MM-DD
+todayDate="$(date +%F)"	
+
+#parametry predavane rsyncu, radeji primo ve scriptu nez v configu, --delete, --backup-dir a podobne nelze takto predavat, musi byt natvrdo na radku rsyncu - buh vi proc
+rsyncOptions="-rltgoDAuv"
+
+#posledni, aktualni zaloha do ktere se hrne rsyncem, z ni se hardlinkuje zbytek
+lastBackup="last"	
+listFile="_rsync.list"
+
+
+if [ -z "$scriptDir" ]
+then
+
+	#v pripade, ze je script spousten ze slozky pracovni, nastavi se mu jine cesty, nez pri spusteni pres cron
+	if [ "$(echo $PWD | grep -c pracovni)" -eq 0 ] && [ "$(echo $0 | grep -c pracovni)" -eq 0 ]	
+	then
+
+		#cesta ke scriptu
+		scriptDir="/usr/local/scripty"
+		verbose=0
+	else
+
+		#cesta ke scriptu
+		scriptDir="/usr/local/scripty/pracovni"
+		verbose=1
+		deBug=1
+	fi
+fi
+
+
+#_EXITY
+#exit 1		#spatne nastavena promenna rsyncMod
+#exit 2		#spatne nastavena nektera z promennych pro mod nfspush
+#exit 3		#spatne nastavena nektera z promennych pro mod nfspull
+#exit 4		#spatne nastavena nektera z promennych pro mod local
+#exit 5		#nepodarilo se pripojit nfs oddil
+
+
+#_LOGOVANI
+
+#nacteni definice funkci Log,LogError,RvLog,MailSend z knihovny
+. $scriptDir/funkce	
+Log "script ($scriptName) - zacatek"
+echo "$$" > "$startFile"
+Log "($startFile) set to ($$)"
+
+
+#_KONFIGURACE
+#zapise konfiguracni soubor, ze ktereho bude nasledne nacitat hodnoty
+write(){
+	if [ -f "$configFile" ]
+	then
+		cp "$configFile" "${configFile}.back"
+		RvLog "provedena zaloha konfigurace do (${configFile}.back)"
+	fi
+	{
+	echo "disabled=1	#vypne/zapne (1/0) provadeni scriptu "
+	echo "recipient=\"\"		#zapsat email pro posilani erroru, pokud je prazdne, logy stejne chodi na vaclavz@comarr.cz"
+	echo "backupLimit=30	#urcuje kolik dennich zaloh se bude drzet"
+	echo "backupMode=\"hardlink\"	#bdir - rsync pobezi s parametrem --backup --backup-dir, kam se budou zalohovat stare soubory"
+	echo "				#hardlink - rsync pobezi bez parametru pro zalohovani a vysledna zaloha se bude delat pomoci hardlinkove kopie"
+	echo "rsyncMode=\"nfspush\"	#urcuje jak bude script fungovat"
+	echo "				#nfspush - spousti se na stroji, ktery se ma zalohovat a pripojuje si nfs oddil v rezimu rw a kopiruje na nej data"
+	echo "				#nfspull - spousti se na zalohovacim stroji, ktery si potrebna data taha sam a pripojuje si zalohovany server pres nfs v rezimu ro"
+	echo "				#local   - spousti se na stroji, ktery se zalohuje na vlastni lokalni disky, napr v junu, kde nemaji nasku"
+	echo "backupList=\"/home/vaclavz/Documents\"	#seznam slozek a souboru pro zalohovani oddeleny mezerou, standardni veci jsou nastavene natvrdo ve scriptu viz defaultList"
+	echo "						#na zacatku musi byt vzdy /"
+	echo "						#na konci nesmi byt nikdy /"
+	echo "localDir=\"\"	#cilova slozka pri lokalnim zalohovani, vzdy bez / na konci."
+	echo "				#cilova slozka pri modu nfspull, vzdy bez / na konci."
+	echo "				#V ni se vytvori slozka podle promenne lastBackup a dale se budou vytvaret slozky podle datumu"
+	echo "nfsMountPoint=\"/mnt/backup\"	#cilova slozka, kam se pripojuje zalohovaci disk, server, nas. vzdy bez / na konci."
+	echo "					#V ni se vytvori slozka podle promenne lastBackup a dale se budou vytvaret slozky podle datumu"
+	echo "nfsMountDevice=\"192.168.111.1:/home/backup\"	#nazev zalohovaciho zarizeni, jak je videt v df a nastaveno na druhe strane"
+	echo "							#v pripade nfs to znamena IP/nazev_zarizeni:/cesta/jak/je/v/etc/exports"
+	} > "$configFile"
+	LogError "zapsan konfiguracni soubor pro server ($HOSTNAME)"
+}
+
+
+if [ -f "$configFile" ]
+then
+	#pokud je v configu promenna disabled s kvotovanou hodnotou, tak ji odkvotuje
+	if [ $(grep -c "disabled=\"" "$configFile") -ne 0 ]
+	then
+		sed -i 's/disabled=\"\([0-9]\+\)\"/disabled=\1/' "$configFile"
+		Log "nahrazeni promenne disabled bez uvozovek"
+	fi
+
+	#pokud je v configu promenna backupLimit s kvotovanou hodnotou, tak ji odkvotuje
+	if [ $(grep -c "backupLimit=\"" "$configFile") -ne 0 ]
+	then
+		sed -i 's/backupLimit=\"\([0-9]\+\)\"/backupLimit=\1/' "$configFile"
+		Log "nahrazeni promenne backupLimit bez uvozovek"
+	fi
+
+	. "$configFile"
+	Log "nacten konfiguracni soubor ($configFile)"
+else
+	write
+	. "$configFile"
+fi
+
+
+
+#pri prvotnim spusteni je script defaultne disablovany
+if [ "$disabled" -eq 1 ]
+then
+	Log "script ($scriptName) je disablovany v ($configFile)"
+	MailSend
+	exit 0
+fi
+
+
+
+#na zaklade nastaveneho modu provede kontrolu nastaveni promennych a nastaveni dalsich potrebnych promennych
+case "$rsyncMode" in
+
+	#nfspush - spousti se na stroji, ktery se ma zalohovat a pripojuje si nfs oddil v rezimu rw a kopiruje na nej data
+	nfspush)
+		if [ -z "$backupList" ] || [ -z "$backupLimit" ] || [ -z "$nfsMountPoint" ] || [ -z "$nfsMountDevice" ]
+		then
+			LogError "case - nfspush - nebyla nastavena nektera z potrebnych promennych"
+			LogError "backupList=($backupList), backupLimit=($backupLimit), nfsMountPoint=($nfsMountPoint), nfsMountDevice=($nfsMountDevice)"
+			MailSend
+			exit 2
+		else
+			Log "case - nfspush - byly nacteny tyto promenne"
+			Log "backupList=($backupList), backupLimit=($backupLimit), nfsMountPoint=($nfsMountPoint), nfsMountDevice=($nfsMountDevice)"
+
+			#posklada mount point zalohy a nazev zalozni slozky
+			backupDir="$nfsMountPoint/$lastBackup"
+			RvLog "Nastavena promenna backupDir ($backupDir)"
+			archiveDir="$nfsMountPoint/$todayDate"
+			RvLog "nastavena promenna archiveDir ($archiveDir)"
+			nfsMountOptions="rw,acl"
+			RvLog "nastavena promenna nfsMountOptions ($nfsMountOptions)"
+			rsyncList="$nfsMountPoint/$listFile"
+			RvLog "nastavena promenna rsyncList ($rsyncList)"
+
+			#zkontroluje, zda existuje slozka na pripojeni
+			CheckDir "$nfsMountPoint"	
+
+			#zkontroluje a pripradne vytvori slozku $backupDir, do ktere se bude zalohovat
+			CheckDir "$backupDir"	
+		fi
+		;;
+
+	#nfspull - spousti se na zalohovacim stroji, ktery si potrebna data taha sam a pripojuje si zalohovany server pres nfs v rezimu ro
+	nfspull)
+		if  [ -z "$backupList" ] || [ -z "$backupLimit" ] || [ -z "$nfsMountPoint" ] || [ -z "$nfsMountDevice" ] || [ -z "$localDir" ]
+		then
+			LogError "case - nfspull - nebyla nastavena nektera z potrebnych promennych"
+			LogError "backupList=($backupList), backupLimit=($backupLimit), nfsMountPoint=($nfsMountPoint), nfsMountDevice=($nfsMountDevice), localDir=($localDir)"
+			MailSend
+			exit 3
+		else
+			Log "case - nfspull - byly nacteny tyto promenne"
+			Log "backupList=($backupList), backupLimit=($backupLimit), nfsMountPoint=($nfsMountPoint), nfsMountDevice=($nfsMountDevice), localDir=($localDir)"
+
+			#posklada mount point zalohy a nazev zalozni slozky
+			backupDir="$localDir/$lastBackup"
+			RvLog "Nastavena promenna backupDir ($backupDir)"
+			archiveDir="$localDir/$todayDate"
+			RvLog "nastavena promenna archiveDir ($archiveDir)"
+			nfsMountOptions="ro,acl"
+			RvLog "nastavena promenna nfsMountOptions ($nfsMountOptions)"
+			rsyncList="$localDir/$listFile"
+			RvLog "nastavena promenna rsyncList ($rsyncList)"
+
+			#zkontroluje, zda existuje slozka na pripojeni
+			CheckDir "$nfsMountPoint"	
+
+			#zkontroluje a pripradne vytvori slozku $backupDir, do ktere se bude zalohovat
+			CheckDir "$backupDir"	
+		fi
+		;;
+
+	#local   - spousti se na stroji, ktery se zalohuje na vlastni lokalni disky, napr v junu, kde nemaji nasku	
+	local)	
+		if  [ -z "$backupList" ] || [ -z "$backupLimit" ] || [ -z "$localDir" ]
+		then
+			LogError "case - local - nebyla nastavena nektera z potrebnych promennych"
+			LogError "backupList=($backupList), backupLimit=($backupLimit), localDir=($localDir)"
+			MailSend
+			exit 4
+		else
+			Log "case - local - byly nacteny tyto promenne"
+			Log "backupList=($backupList), backupLimit=($backupLimit), localDir=($localDir)"
+
+			#posklada mount point zalohy a nazev zalozni slozky
+			backupDir="$localDir/$lastBackup"
+			RvLog "Nastavena promenna backupDir ($backupDir)"
+			archiveDir="$localDir/$todayDate"
+			RvLog "nastavena promenna archiveDir ($archiveDir)"
+			rsyncList="$localDir/$listFile"
+			RvLog "nastavena promenna rsyncList ($rsyncList)"
+
+			#zkontroluje a pripradne vytvori slozku $backupDir, do ktere se bude zalohovat
+			CheckDir "$backupDir"	
+		fi
+		;;
+	*)
+		LogError "nebyl spravne nastaven rsyncMode v ($configFile)"
+		MailSend
+		exit 1
+		;;
+esac
+
+
+
+#kontrola nastaveni promenne backupMode
+case "$backupMode" in
+	bdir)
+		Log "nastaven backupMode pro spousteni rsyncu s parametrem --backup --backup-Dir"
+		;;
+	hardlink)
+		Log "nastaven backupMode pro spousteni rsyncu bez backup parametru a zalohovanim pomoci hardlinkovych kopii"
+		;;
+	*)
+		LogError "nebyl nastaven parametr backupMode, nebo byl nastaven spatne ($backupMode)"
+		MailSend
+		exit 1
+		;;
+esac
+
+
+
+#v pripade nfs zalohovani zkontroluje odpojeni oddilu a pripoji ho
+if [ "$rsyncMode" = "nfspush" ] || [ "$rsyncMode" = "nfspull" ]
+then
+	Log "Kontrola odpojeni mount pointu"
+
+	#kontrola odpojeni nfsMountDevice, pokud nebyl oddil odpojen, da mu unmount, aby se nezalohovalo na seknuty mount
+	if [ "$(mount | grep -c $nfsMountDevice)" -ne 0 ]	
+	then
+		LogError "zustal viset ($nfsMountDevice)"
+		umount -l -f "$nfsMountPoint"
+		RvLog "umount oddilu ($nfsMountDevice) z ($nfsMountPoint)"
+	fi
+	Log "pripojeni ($nfsMountDevice) na ($nfsMountPoint)"
+	mount -t nfs -o "$nfsMountOptions" "$nfsMountDevice" "$nfsMountPoint"
+	RvLog "pripojeni oddilu ($nfsMountDevice) na ($nfsMountPoint)"
+	if [ "$?" -ne 0 ]
+	then
+		LogError "Nepodarilo se pripojit oddil ($nfsMountDevice) na ($nfsMountPoint), koncime"
+		MailSend
+		exit 5
+	else
+		Log "uspesne pripojen ($nfsMountDevice) na ($nfsMountPoint)"
+	fi
+fi
+
+
+Log "Zacatek zalohovani"
+
+#pole se seznamem zalohovanych veci
+backupARRAY=($(echo "$backupList $defaultList"))
+RvLog "nastaveno pole backupARRAY (${backupARRAY[@]})"
+archiveList="$archiveDir/$listFile"
+RvLog "nastavena promenna archiveList ($archiveList)"
+
+
+
+#vlastni rsyncova zaloha
+for backupItem in ${backupARRAY[@]}
+do
+	case "$rsyncMode" in
+
+		#spusteni rsyncu v modu nfspush
+		nfspush)
+			if [ "$backupMode" = "bdir" ]
+
+			#spusteni rsyncu v backup modu bdir
+			then
+				RvLog "rsync - ($rsyncMode) - ($backupMode) - spusteni zalohy ($backupItem) do ($backupDir)"
+				CheckDir "$archiveDir"
+				TestDir "$backupItem"
+				echo -e "\n##########$(date) - $backupItem" >> "$archiveList"		#zapise datum do souboru $archiveList
+				rsync "$rsyncOptions" --delete --bwlimit=32000 --backup --backup-dir="$archiveDir" "$backupItem" "$backupDir" >> "$archiveList"
+				RvLog "rsync - ($rsyncMode) - ($backupMode) - ($backupItem) do ($backupDir) dobehl"
+
+			#spusteni rsyncu v backup modu hardlink
+			else
+				:
+				RvLog "rsync - ($rsyncMode) - ($backupMode) - spusteni zalohy ($backupItem) do ($backupDir)"
+				TestDir "$backupItem"
+				echo -e "\n##########$(date) - $backupItem" >> "$rsyncList"		#zapise datum do souboru $rsyncList
+				rsync "$rsyncOptions" --delete --bwlimit=32000 "$backupItem" "$backupDir" >> "$rsyncList"
+				RvLog "rsync - ($rsyncMode) - ($backupMode) - ($backupItem) do ($backupDir) dobehl"
+			fi
+			;;
+
+		#spusteni rsyncu v modu nfspull
+		nfspull)
+			if [ "$backupMode" = "bdir" ]
+
+			#spusteni rsyncu v backup modu bdir
+			then
+				RvLog "rsync - ($rsyncMode) - ($backupMode) - spusteni zalohy (${nfsMountPoint}$backupItem) do ($backupDir)"
+				CheckDir "$archiveDir"
+				TestDir "${nfsMountPoint}$backupItem"
+				echo -e "\n##########$(date) - $backupItem" >> "$archiveList"		#zapise datum do souboru $archiveList
+				rsync "$rsyncOptions" --delete --bwlimit=32000 --backup --backup-dir="$archiveDir" "${nfsMountPoint}$backupItem" "$backupDir" >> "$archiveList"
+				RvLog "rsync - ($rsyncMode) - ($backupMode) - (${nfsMountPoint}$backupItem) do ($backupDir) dobehl"
+
+			#spusteni rsyncu v backup modu hardlink
+			else
+				:
+				RvLog "rsync - ($rsyncMode) - ($backupMode) - spusteni zalohy (${nfsMountPoint}$backupItem) do ($backupDir)"
+				TestDir "${nfsMountPoint}$backupItem"
+				echo -e "\n##########$(date) - $backupItem" >> "$rsyncList"		#zapise datum do souboru $rsyncList
+				rsync "$rsyncOptions" --delete --bwlimit=32000 "${nfsMountPoint}$backupItem" "$backupDir" >> "$rsyncList"
+				RvLog "rsync - ($rsyncMode) - ($backupMode) - (${nfsMountPoint}$backupItem) do ($backupDir) dobehl"
+			fi
+			;;
+
+		#spusteni rsyncu v modu local
+		local)	
+			if [ "$backupMode" = "bdir" ]
+
+			#spusteni rsyncu v backup modu bdir
+			then
+				RvLog "rsync - ($rsyncMode) - ($backupMode) - spusteni zalohy ($backupItem) do ($backupDir)"
+				CheckDir "$archiveDir"
+				TestDir "$backupItem"
+				echo -e "\n##########$(date) - $backupItem" >> "$archiveList"		#zapise datum do souboru $archiveList
+				rsync "$rsyncOptions" --delete --bwlimit=32000 --backup --backup-dir="$archiveDir" "$backupItem" "$backupDir" >> "$archiveList"
+				RvLog "rsync - ($rsyncMode) - ($backupMode) - ($backupItem) do ($backupDir) dobehl"
+
+			#spusteni rsyncu v backup modu hardlink
+			else
+				:
+				RvLog "rsync - ($rsyncMode) - ($backupMode) - spusteni zalohy ($backupItem) do ($backupDir)"
+				TestDir "$backupItem"
+				echo -e "\n##########$(date) - $backupItem" >> "$rsyncList"		#zapise datum do souboru $rsyncList
+				rsync "$rsyncOptions" --delete --bwlimit=32000 "$backupItem" "$backupDir" >> "$rsyncList"
+				RvLog "rsync - ($rsyncMode) - ($backupMode) - ($backupItem) do ($backupDir) dobehl"
+			fi
+			;;
+	esac
+done
+Log "dokonceno zalohovani rsync - ($rsyncMode) - ($backupMode)"
+
+
+
+#zhardlinkuje slozku se zalohou do archivacni slozky
+if [ ! -d "$archiveDir" ] && [ "$backupMode" = "hardlink" ]	
+then
+	cp -al "$backupDir" "$archiveDir"
+	RvLog "vytvorena hardlinkova kopie zalohy ($archiveDir)"
+	mv "$rsyncList" "$archiveList"
+	RvLog "zapsan seznam zmen od posledni zalohy do ($archiveList)"
+fi
+
+
+#zhardlinkuje slozku se zalohou do archivacni slozky
+if [ -d "$archiveDir" ] && [ "$backupMode" = "hardlink" ]	
+then
+	Log "opakovane, rucni spusteni scriptu ($scriptName)"
+fi
+
+
+Log "odstraneni starych zaloh ze slozky (${backupDir%last})"
+find "${backupDir%last}" -maxdepth 1 -type d -mtime +"$backupLimit" \! -name "$lastBackup" -exec rm -r {} \;
+RvLog "prohledana slozka (${backupDir%last}) a odstraneny zalohy starsi nez ($backupLimit) dnu"
+
+#provede zapsani zmen na disky
+sync
+RvLog "sync disku"
+
+
+#v pripade nfs zalohovani provede odpojeni oddilu
+if [ "$rsyncMode" = "nfspush" ] || [ "$rsyncMode" = "nfspull" ]
+then
+	Log "odpojeni nfs oddilu ($nfsMountDevice)"
+	umount -l -f "$nfsMountPoint"
+	RvLog "umount ($nfsMountPoint)"
+fi
+
+
+MailSend
+Log "OK - ($scriptName) zalohovani dokonceno"
+exit 0

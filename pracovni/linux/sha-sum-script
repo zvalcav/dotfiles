@@ -1,0 +1,392 @@
+#!/bin/bash
+#sha-sum-script
+#script pro generovani a kontrolu sha-sum-script
+#version 1.0.0
+
+#_LOGOVANI #_FUNKCE #_PARAMETRY
+
+scriptName="sha-sum-script"
+#v pripade, ze je script spousten ze slozky pracovni, nastavi se mu jine cesty, nez pri spusteni pres cron
+if [ "$(echo $PWD | grep -c pracovni)" -ne 0 ] || [ "$(echo $0 | grep -c pracovni)" -ne 0 ]
+then
+	#cesta ke scriptu
+	scriptDir="/usr/local/scripty/pracovni"
+	verbose=1
+	deBug=1
+else
+	#cesta ke scriptu
+	scriptDir="/usr/local/scripty"
+	verbose=0
+fi
+#nastavi se na 1 s parametrem -c
+checkParam=0
+#pokud je predan parametr s cestou, tak se nastavi na ni, jinak $PWD
+pathParam="$PWD"
+#nastavi se na 1 s parametrem -q
+quiet=0
+#nastavi se na 1 s parametrem -r
+recursiveParam=0
+#nastavi se na 1 s parametrem -u
+updateParam=0
+shaSumFile="SHA1SUM"
+tmpDirList="/tmp/sha-sum-script-dir.list"
+
+#_LOGOVANI
+
+#nacteni definice funkci Log,LogError,RvLog,MailSend z knihovny
+. $scriptDir/funkce 
+Log "script ($scriptName) - zacatek"
+echo "$$" > "$startFile"
+Log "($startFile) set to ($$)"
+
+#_FUNKCE
+
+#f_log
+#funkce slouzi pro bezne provozni zaznamy
+#provede zapis predaneho parametru do logu (/var/log/scripty)
+#pri verbose i na screen
+f_log()
+{
+	if [ "$verbose" -eq 1 ]
+	then
+		echo "$(date '+%b %d %T') $HOSTNAME $scriptName: Log - $1" | tee -a "$logFile"
+	else
+		echo "$(date '+%b %d %T') $HOSTNAME $scriptName: Log - $1" >> "$logFile"
+	fi
+}
+
+
+#f_log_error
+#funkce slouzi pro logovani erroru, pripadne ukonceni programu
+#provede ERROR zapis predaneho parametru do logu s nazvnem scriptu v (/var/log/scripty)
+#f_log_error "text pro zalogovani" "exit"
+f_log_error()
+{
+	if [ "$verbose" -eq 1 ] || [ "$quiet" -eq 0 ]
+	#if [ "$verbose" -eq 1 ]
+	then
+		echo "$(date '+%b %d %T') $HOSTNAME $scriptName: Error - $1" | tee -a "$logFile"
+		touch "$errorFile"
+	else
+		echo "$(date '+%b %d %T') $HOSTNAME $scriptName: Error - $1" >> "$logFile"
+		touch "$errorFile"
+	fi
+	#pokud je druhy parametr exit, tak provede ukonceni programu
+	if [ "$2" = "exit" ]
+	then
+		exit 3
+	fi
+}
+
+#f_rv_log
+#provede kontrolu navratove hodnoty, v pripade, ze je 1, provede zalogovani predaneho parametru jako error
+f_rv_log()
+{
+	rv="$?"
+	if [ "$rv" -eq 0 ]
+	then
+		[ "$deBug" -eq 1 ] && f_log "f_rv_log - [$1]"
+	else
+		f_log_error "f_rv_log - [$1] ($rv)"
+	fi
+	return "$rv"
+}
+
+#f_test_dir
+#funkce provede kontrolu existence slozky predane v parametru
+
+f_test_dir()
+{
+	if [ ! -d "$1" ]
+	then
+		f_log_error "zadana slozka neexistuje" "exit"
+	else
+		f_log "slozka [$1] existuje"
+	fi
+	return 0
+}
+
+#f_check_sha_sum
+#funkce provede kontrolu SHA1SUM v predane ceste, vrati pocet nesouhlasicich sha1sum
+#pokud presahne 254, tak vrati 254
+#f_check_sha_sum "/cesta"
+f_check_sha_sum()
+{
+	workingDir="$1"
+	checkCount=0
+	#kontrola existence slozky
+	f_test_dir "$workingDir"	
+	rv="$?"
+	#pokud slozka existuje, pak se do ni prepne
+	if [ "$rv" -eq 0 ]
+	then
+		cd "$workingDir"
+		f_rv_log "zmena slozky do [$workingDir]"
+		echo "zpracovavam slozku [$workingDir]"
+	fi
+
+	#pokud najde soubor se sumou, tak provede kontrolu
+	if [ -f "$shaSumFile" ]
+	then
+		while read line
+		do
+			#vynecha samotny soubor se sumou
+			if [ "$(echo $line | grep -c $shaSumFile)" -eq 1 ] || [[ "$line" =~ ^'#' ]]
+			then
+				continue
+			fi
+
+			echo "$line" | sha1sum --check --status
+			#f_rv_log "kontrola sha1sum souboru {$line}"
+			f_rv_log "kontrola sha1sum souboru {$line}"
+			if [ "$?" -ne 0 ]
+			then
+				echo "."
+				echo "$line" | sha1sum --check
+				f_rv_log "nesouhlasi checksum na radku $line ve slozce $workingDir"
+			fi
+			checkCount=$(($checkCount+$?))
+		done < "$shaSumFile"
+	else
+		#pta se pouze kdyz je spusten rucne
+		if [ "$quiet" -ne 1 ]
+		then
+			#pokud v zadane slozce neexistuje sha1sum soubor, nabidne jeho vytvoreni
+			echo "ve slozce [$workingDir] neni soubor ($shaSumFile)"
+			echo "mam provest vytvoreni sha1sum misto kontroly? (y/n)"
+			read checkSumNotFound
+			f_log "dotaz na vytvoreni souboru s sha1sum ($checkSumNotFound)"
+			#kontrola zadane odpovedi
+			case "$checkSumNotFound" in
+				y|Y)
+					#pusti funkci pro zapsani sha1sum v zadane slozce
+					f_write_sha_sum "$workingDir"
+					;;
+					#neudela nic
+				n|N)
+					return 0
+					;;
+				*)
+					echo "spatne zadani, predpokladam odpoved n"
+					return 0
+					;;
+			esac
+		else
+			f_log_error "ve slozce [$workingDir] neni ($shaSumFile)"
+			f_log_error "pro vytvoreni je potreba spustit prikaz"
+			f_log_error "sha-sum-script $workingDir"
+		fi
+
+	fi
+
+	#navrat do vychozi slozky
+	cd -
+
+	if [ "$checkCount" -eq 0 ]
+	then
+		echo "vsechny checksumy souhlasi"
+		return 0
+	fi
+	#slouzi pro kontrolu, aby pocet nesouhlasicich chyb nepresahl hranici 254
+	if [ "$checkCount" -gt 254 ]
+	then
+		f_log_error "checksumy ve slozce $workingDir nesouhlasi pro vice nez 254 souboru"
+		return 254
+	else
+		f_log_error "checksumy nesouhlasi pro $checkCount soubor/u ve slozce $workingDir"
+		f_log_error "pro podrobnejsi iformace viz /var/log/scripty"
+		return "$checkCount"
+	fi
+}
+
+#f_write_sha_sum
+#funkce provede zapis sha1sum v zadane slozce
+#f_write_sha_sum "/cesta"
+f_write_sha_sum()
+{
+	workingDir="$1"
+	#kontrola existence slozky
+	f_test_dir "$workingDir"	
+	rv="$?"
+	#pokud slozka existuje, pak se do ni prepne
+	if [ "$rv" -eq 0 ]
+	then
+		cd "$workingDir"
+		f_rv_log "prepnuti do slozky do [$workingDir]"
+		echo "zpracovavam slozku [$workingDir]"
+	fi
+
+	#pokud nenajde SHA1SUM soubor, tak ho vytvori, coz je zadouci stav
+	#pokud soubor najde, bude se jednat o update
+	if [ ! -f "$shaSumFile" ]
+	then
+		#find . -maxdepth 1 -type f -exec sha1sum {} \; >> "$shaSumFile"
+		find . -maxdepth 1 -type f ! -name "$shaSumFile" -exec sha1sum {} \; >> "$shaSumFile"
+		f_rv_log "zapis ($shaSumFile) v [$workingDir]"
+		f_log "zapis souboru ($shaSumFile) ve slozce [$workingDir]"
+	else
+		#pokud nasel soubor a je nastave updateParam tak ho prepise bez ptani
+		if [ "$updateParam" -eq 1 ]
+		then
+			: > "$shaSumFile"
+			#find . -maxdepth 1 -type f -exec sha1sum {} \; >> "$shaSumFile"
+			find . -maxdepth 1 -type f ! -name "$shaSumFile" -exec sha1sum {} \; >> "$shaSumFile"
+			f_rv_log "update ($shaSumFile) v ($workingDir)"
+			f_log "update existujiciho souboru ($shaSumFile) ve slozce ($workingDir)"
+		else
+			#pokud v zadane slozce existuje sha1sum soubor, zepta se na prepsani,
+			#pokud neni spusten s parametrem -q
+			if [ "$quiet" -ne 1 ]
+			then
+				#parametr quiet neni nastaven, predpoklada rucni, 
+				#interaktivni spusteni, zepta se na potrvrzeni
+				echo "ve slozce [$workingDir] jiz existuje soubor ($shaSumFile)"
+				echo "mam provest (k)ontrolu sha1sum nebo (z)apis noveho? (k/z)"
+				read checkSumFound
+				case "$checkSumFound" in
+					z|Z)
+						#smaze puvodni soubor a pusti funkci pro zapsani sha1sum v zadane slozce
+						rm "$shaSumFile"
+						f_rv_log "vynuceny zapis noveho sha1sum, odstraneni puvodniho souboru ($shaSumFile)"
+						f_write_sha_sum "$workingDir"
+						return 0
+						;;
+					k|K)
+						#provede kontrolu sha1sum
+						f_log "vynucena kontrola sha1sum, spoustim funkci pro check"
+						f_check_sha_sum "$workingDir"
+						return 0
+						;;
+					*)
+						echo "spatne zadani, nic se neprovede"
+						f_log "zadana spatna hodnota, vynechavam zpracovani slozky $workingDir"
+						return 0
+						;;
+				esac
+			else
+				#nebyl zadan parametr pro update a script bezi s parametrem quiet
+				#zaloguje error pro snazsi diagnostiku
+				f_log_error "soubor ($shaSumFile) ve slozce [$workingDir] jiz existuje"
+				f_log_error "pro rucni vyreseni problemu je nutne spustit"
+				f_log_error "sha-sum-script -u $workingDir"
+				return 1
+			fi
+		fi
+	fi
+	return 0
+}
+
+#_PARAMETRY
+#kontrola predaneho parametru
+#zpracovani vstupnich parametru
+while [ "$#" -gt 0 ]
+do
+	case "$1" in
+		-c|--check)
+			#provede kontrolu SHA1SUM
+			checkParam=1
+			#pouzije se f_check_sha_sum
+			;;
+		-f|--file)
+			shift
+			shaSumFile="$1"
+			;;
+		-h|--help)
+			#vypis napovedy
+			echo "sha-sum-script -[parametr] /cesta	- ex: sha-sum-script -c --recursive /home/homes"
+			echo "sha-sum-script \"bez parametru\"		- zapise sha1sum vsech souboru v aktualni slozce"
+			echo "sha-sum-script /cesta			- zapise sha1sum vsech souboru v zadane slozce"
+			echo "sha-sum-script -c|--check		- provede kontrolu sha-sum-script v aktualni slozce"
+			echo "sha-sum-script -c /cesta		- provede kontrolu sha-sum-script v zadane slozce"
+			echo "sha-sum-script -f|--file NazevSouboru	- zmena vychoziho nazvu souboru pro kontrolu cizich dat"
+			echo "sha-sum-script -h|--help		- vypis teto napovedy"
+			echo "sha-sum-script -q			- slouzi pro spousteni z cronu, aby se na nic neptal"
+			echo "sha-sum-script -r|--recursive		- zapise sha1sum rekurzivne v aktualni slozce"
+			echo "sha-sum-script -r /cesta		- zapise sha1sum rekurzivne v zadane slozce"
+			echo "sha-sum-script -u|--update		- puvodni sumy budou automaticky prepisovany"
+			echo "sha-sum-script -v|--verbose		- zapne vypis zpracovavanych souboru na konzoli"
+			f_log "vypsana napoveda"
+			exit 0
+			;;
+		-q|--quiet)
+			#slouzi pro spousteni z cronu, kdy vynecha veskere dotazy
+			quiet=1
+			f_log "zadan parametr -q, nastavena promenna quiet=$quiet"
+			;;
+		-r|--recursive)
+			#pobezi rekurzivne a bez dotazu
+			recursiveParam=1
+			quiet=1
+			f_log "zadan parametr -r, nastavena promenna recursiveParam=$recursiveParam a quiet=$quiet"
+			;;
+		-u|--update)
+			#vynuceny update sum
+			updateParam=1
+			f_log "zadan parametr -u, nastavena promenna updateParam=$updateParam"
+			;;
+		-v|--verbose)
+			#verbose vystup
+			verbose=1
+			f_log "zadan parametr -v, nastavena promenna verbose=$verbose"
+			;;
+		*)
+			#zpracovani predane cesty
+			#pokud zadana slozka existuje, tak ji nastavi do paramPath
+			if [ ! -d "$1" ]
+			then
+				echo "neplatna cesta v parametru, nejedna se o slozku"
+				f_log_error "neplatna cesta v parametru, nejedna se o slozku"
+				exit 1
+			else
+				pathParam="$1"
+				f_log "zadana cesta $pathParam"
+			fi
+			;;
+	esac
+	#posun predanych parametru o 1
+	shift
+done
+
+#kontrola, zda byl zadan parametr -r pro rekurzivni prochazeni podslozek
+if [ "$recursiveParam" -ne 1 ]
+then
+	#bez rekurzivniho prochazeni zavola jen funkci bez cesty
+	if [ "$checkParam" -eq 1 ]
+	then
+		f_check_sha_sum "$pathParam"
+		f_rv_log "kontrola sum pro slozku ($pathParam)"
+	else
+		f_write_sha_sum "$pathParam"
+		f_rv_log "zapis sum pro slozku ($pathParam)"
+	fi
+else
+	#s rekurzivnim parametrem spusti find pro vytvoreni struktury slozek
+	#seznam se ulozi do souboru $tmpDirList, ktery se pak preda
+	#while cyklu pro provedeni
+	find "$pathParam" -type d > "$tmpDirList"
+	
+	#v pripade -c parametru spusti pouze kontrolu SHA1SUM
+	if [ "$checkParam" -eq 1 ]
+	then
+		#zpracuje kazdy radek seznamu slozek pro kontrolu sha1sum
+		while read line
+		do
+			f_check_sha_sum "$line"
+			f_rv_log "kontrola sum pro slozku ($line)"
+		done < "$tmpDirList"
+	else
+		#zpracuje kazdy radek seznamu slozek pro zapis sha1sum
+		while read line
+		do
+			f_write_sha_sum "$line"
+			f_rv_log "zapis sum pro slozku ($line)"
+		done < "$tmpDirList"
+	fi
+fi
+
+if [ -f "$tmpDirList" ]
+then
+	rm "$tmpDirList"
+fi
+MailSend
+exit 0

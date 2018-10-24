@@ -1,0 +1,10 @@
+#!/bin/bash
+if [ -n "$1" ]
+then
+	echo "disabling $1"
+	systemctl disable "$1"
+	echo "is enabled:"
+	systemctl is-enabled "$1"
+else
+	echo "je potreba zadat nazev sluzby do parametru"
+fi

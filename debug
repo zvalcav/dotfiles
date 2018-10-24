@@ -1,0 +1,22 @@
+#!/bin/bash
+
+debugDir="/var/log/debug"
+
+#kontrola poctu parametru
+if [ "$#" -ne 1 ]
+then
+	echo "Je potreba zadat nazev scriptu do parametru a byt ve slozce se scriptem, vice parametru neni podporovano"
+	exit 0
+else
+	echo "debugovani scriptu ($1) - zachyceny vystup bude v ($debugDir/${1##*/}.log)"
+fi
+
+#kontrola slozky pro vystupy
+if [ ! -d "$debugDir" ]
+then
+	mkdir -p "$debugDir"
+	echo "neexistuje slozka debugDir, vytvari se"
+fi
+
+bash -x "$1" 2> "$debugDir/${1##*/}.log"
+exit "$?"

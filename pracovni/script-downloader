@@ -1,0 +1,59 @@
+#!/bin/bash
+#script-downloader
+#script, ktery bude spousteny cronem a bude se starat o stahovani aktualizaci z monitoringu
+#rucni spusteni s parametrem -f, pak se vynecha delay
+
+
+#LIST _PROMENNE _EXITY _LOGOVANI _PODMINKY _KONFIGURACE _FUNKCE _ZALOHA
+
+
+#_PROMENNE
+scriptName="script-downloader"
+
+#v pripade, ze je script spousten ze slozky pracovni, nastavi se mu jine cesty, nez pri spusteni pres cron
+if [ "$(echo $PWD | grep -c pracovni)" -eq 0 ] && [ "$(echo $0 | grep -c pracovni)" -eq 0 ]
+then
+
+#cesta ke scriptu
+	scriptDir="/usr/local/scripty"
+	verbose=0
+else
+
+#cesta ke scriptu
+	scriptDir="/usr/local/scripty/pracovni"
+	verbose=1
+	deBug=1
+fi
+
+
+#_LOGOVANI
+
+#nacteni definice funkci Log,LogError,RvCheck,MailSend z knihovny
+. $scriptDir/funkce 
+echo "$$" > "$startFile"
+Log "($startFile) set to ($$)"
+
+if [ "$1" != "-f" ]
+then
+	#random delay
+	randomDelay=$(( $RANDOM % 600))
+	Log "waiting ($randomDelay) seconds, pokud to poustis rucne, tak dej -f"
+	sleep $randomDelay
+else
+	Log "forced manual start, no delay"
+fi
+
+
+#stazeni scriptu
+if [ "$HOSTNAME" != "monitoring.comarr.cz" ] && [ "$HOSTNAME" != "zabral.comarr.cz" ]
+then
+	RvLog "spoustim stazeni scriptu"
+	rsync -av --delete --exclude=".backup" --delete-excluded monitoring.comarr.cz::scripty /usr/local/scripty >> "$outputFile"
+	RvLog "stazeni scriptu ze serveru monitoring dokonceno"
+else
+	LogError "prevence spusteni ve smycce na monitoringu"
+fi
+
+
+MailSend
+exit 0

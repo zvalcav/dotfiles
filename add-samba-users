@@ -1,0 +1,365 @@
+#!/bin/bash
+#script pro davkove hromadne vytvoreni uzivatelu (halvne GJR)
+
+#LIST #_PROMENNE #_LOGOVANI #_DOTAZY
+
+#_PROMENNE
+scriptName="add-users-samba"
+
+
+#defaultne bez echo, pokud chces echo zapnout, pak dej scriptu parametr -v
+scriptDir="/usr/local/scripty/pracovni"	#cesta do slozky se scriptama
+verbose=1 		#pro ucely ladeni lze nastavit natvrdo hodnotu 1
+deBug=1			#pro podrobnejsi logovani
+#unixHomeDirectory=/home/homes #pro nastaveni domovskeho adresare na linuxu
+#netbiosName=SERVER	pro poskladani cesty k home directory atd
+#windowsHomeDirectory=\\server\home\trida\uzivatel
+#domain			#promena je nastavena pres read a pres sed nasledne upravena pro ldap zaznamy
+#slozka pro nahrani csv souboru
+v_csv_folder_location="/root/add-samba-users"
+#nacteni dlouheho a kratkeho roku z date
+v_year_long=$(date +%Y)
+v_year_short=$(date +%y)
+v_group_ldif_file=group.ldif
+v_group_ldif_log=group.ldif.log
+v_user_ldif_file=user.ldif
+v_user_ldif_log=user.ldif.log
+
+#vycisteni logovacich souboru
+: > "$v_group_ldif_log"
+: > "$v_user_ldif_log"
+
+#_LOGOVANI
+
+#nacteni definice funkci Log,LogError,RvCheck,MailSend z knihovny
+. $scriptDir/funkce
+
+
+#vypis napovedy
+case "$1" in
+	-h|--help)
+		echo "script na hromadne pridavani uzivatelu do samby z linuxu"
+		echo "jako vstup scriptu slouzi csv soubor, kde oddelovacem jsou stredniky (;)"
+		echo ""
+		echo "soubor se nacita ze slozky $v_csv_folder_location, je potreba ve slozce mit pouze 1 csv"
+		echo "script se zepta na e-mailovou domenu, hromadne heslo a na nahrany soubor"
+		echo "automaticky se nacita netbios, domain realm, domena pro ldapove zaznamy"
+		echo "pokud se dotazovane hodnoty schoduji s defaultem v [], staci enter"
+		echo ""
+		echo "soubor musi byt ve formatu LOGIN;JMENO;PRIJMENI;TRIDA"
+		echo "LOGIN - je jedno, jestli je velkyma, malyma, nebo mix, hlavne bez mezer, diakritiky"
+		echo "JMENO - cokoliv, ale radeji bez mezer"
+		echo "PRIJMENI - cokoliv, ale radeji bez mezer"
+		echo "TRIDA - nove tridy by mely byt ve formatu 0.{A,B,E}, kdy cislo se odecita od dvouciferne"
+		echo "hodnoty roku nastupu do skoly, tzn nastup 2015, trida 0.A znamena skupinu _15A"
+		echo ""
+		echo "automaticky zkontroluje duplicitni loginy v zadanem souboru"
+		echo "zkontroluje taky domenu na pritomnost duplicit vuci zadanemu souboru"
+		echo "automaticky vytvori uzivatele, skupiny, namapuje je do linuxu, vytvori home adresare"
+		echo ""
+		echo "hodnoty exitu:"
+		echo "3 - nebyl nacten csv soubor"
+		echo "4 - soubor obsahuje duplicitni loginy"
+		echo "5 - duplicitni login vuci domene"
+		exit 0
+		;;
+esac
+
+#_DOTAZY
+#nacteni netbios domeny
+v_netbios_domain_line=$(grep workgroup /etc/samba/smb.conf | tr 'A-Z' 'a-z')
+v_netbios_domain=${v_netbios_domain_line//*\ }
+Log "byla nactena netbios domena ($v_netbios_domain)"
+
+#nacteni domain realmu
+v_domain_realm_line=$(grep realm /etc/samba/smb.conf | tr 'A-Z' 'a-z')
+Log "byl nacten radek realm z /etc/samba/smb.conf ($v_domain_realm_line)"
+
+#odstrani z promenne vse az k posledni mezere pred samotnym realmem
+v_domain_realm="${v_domain_realm_line//*\ }"
+Log "upraven zaznam pro realm ($v_domain_realm)"
+
+#vytvoreni zaznamu pro domenu v ldap formatu
+v_domain_realm_ldap=$(echo "$v_domain_realm" | sed -e 's/^/dc=/g' -e 's/\./,dc=/g')
+Log "nastaven ldap zaznam pro domenu ($v_domain_realm_ldap)"
+
+#zkontroluje, pripadne vytvori slozku, kam je nutne nahrat csv soubor
+CheckDir "$v_csv_folder_location"
+
+#dotaz na mailovou domenu
+echo "zadej domenu pro maily: [gjr.cz]"
+read v_mail_domain
+if [ -z "$v_mail_domain" ]
+then
+	v_mail_domain="gjr.cz"
+	Log "nastavena defaultni hodnota pro maily gjr.cz"
+else
+	Log "byla rucne zadana hodnota ($v_mail_domain)"
+fi
+
+#dotaz na letosni heslo
+echo "zadej spolecne hoslo k uctum: [Gjr$v_year_long]"
+read v_password
+if [ -z "$v_password" ]
+then
+	v_password="Gjr$v_year_long"
+	Log "bylo nastaveno defaultni vychozi heslo"
+else
+	Log "bylo rucne zadano heslo ($v_password)"
+fi
+
+#_KONTROLY	
+#nacteni maximalni hodnoty uidNumber pres ldbsearch z databaze
+declare -i v_max_uid_number=$(ldbsearch -H /var/lib/samba/private/sam.ldb '(objectClass=posixAccount)' uidNumber | grep uidNumber | cut -d' ' -f 2 | sort -n | tail -1)
+#pokud je maximalni uid mensi nez 10000, tak se nastavi na tuto hodnotu
+if [ "$v_max_uid_number" -lt 10000 ]
+then
+	v_max_uid_number=10000
+fi
+Log "nactena maximalni hodnota uidNumber ($v_max_uid_number)"
+
+#nacteni maximalni hodnoty gidNumber pres ldbsearch z databaze
+declare -i v_max_gid_number=$(ldbsearch -H /var/lib/samba/private/sam.ldb '(objectClass=posixGroup)' gidNumber | grep gidNumber | cut -d' ' -f 2 | sort -n | tail -1)
+#pokud je maximalni gid mensi nez 5000, tak se nastavi na tuto hodnotu
+if [ "$v_max_gid_number" -lt 5000 ]
+then
+	v_max_gid_number=5000
+fi
+Log "nactena maximalni hodnota gidNumber ($v_max_gid_number)"
+
+#
+Log "je csv souboru ve slozce $v_csv_folder_location? Pokud ne, tak ho do ni nahraj a pokracuj stisknutim enteru"
+Log "SOUBOR MUSI BYT VE FORMATU LOGIN;JMENO;PRIJMENI;TRIDA"
+read response
+
+#zkontroluje pritomnost csv souboru ve slozce a pomoci menu nabidne soubory ke zpracovani
+if [ $(ls "$v_csv_folder_location"/*.csv | wc -l) -ne 1 ]
+then
+	LogError "ve slozce ($v_csv_folder_location) nebylo nalezeno pozadovane mnozstvi csv souboru (1)"
+	MailSend
+	exit 3
+else
+	#nacteni csv souboru
+	v_csv_file=$(ls $v_csv_folder_location/*.csv)
+	Log "nacten soubor ($v_csv_file)"
+
+	#zkontroluje duplicity v souboru
+	if [ $(cut -d';' -f1 "$v_csv_file" | sort | uniq -c | sed -e '/^\s*1 /d' | wc -l) -ne 0 ]
+	then
+		LogError "POZOR v souboru jsou duplicitni loginy, jenutno ho zkontrolovat"
+		cut -d';' -f1 "$v_csv_file" | sort | uniq -c | sed -e '/^\s*1 /d' | wc -l
+		exit 4
+	fi
+	Log "provedena kontrola souboru na duplicitni loginy"
+
+	#zkontroluje domenu na duplicity
+	for v_login_check in $(cut -d';' -f1 "$v_csv_file" | tr 'A-Z' 'a-z')
+	do
+		if [ $(wbinfo -u | grep -c "$v_login_check") -ne 0 ]
+		then
+			LogError "POZOR, v domene uz existuje uzivatel s loginem ($v_login_check)"
+			exit 5
+		fi
+	done
+	Log "provedena kontrola domeny na duplicity"
+	
+	declare -i v_class_number
+	#cyklus na zpracovani csv souboru
+	while read v_line
+	do
+		v_login=$(echo "$v_line" | cut -d';' -f 1 | tr 'A-Z' 'a-z')
+		v_name=$(echo "$v_line" | cut -d';' -f 2)
+		v_lastname=$(echo "$v_line" | cut -d';' -f 3)
+		v_class_number=$(echo "$v_line" | cut -d';' -f 4 | cut -d'.' -f1)
+		v_class_letter=$(echo "$v_line" | cut -d';' -f 4 | cut -d'.' -f2 | tr 'a-z' 'A-Z')
+		v_class_letter_small=$(echo "$v_line" | cut -d';' -f 4 | cut -d'.' -f2 | tr 'A-Z' 'a-z')
+		Log "byly nacteny promenne v_login=($v_login), v_name=($v_name), v_lastname=($v_lastname), v_class_number=($v_class_number), v_class_letter=($v_class_letter)"
+
+		if [ -z "$v_login" ] || [ -z "$v_name" ] || [ -z "$v_lastname" ] || [ -z "$v_class_number" ] || [ -z "$v_class_letter" ]
+		then
+			#pokud se u uzivatele nenactou vsechny promenne, tak ho to preskoci a zaznamena do erroru
+			LogError "nektera z pozadovanych hodnot se nenacetla, v_login=($v_login), v_name=($v_name), v_lastname=($v_lastname), v_class_number=($v_class_number), v_class_letter=($v_class_letter)"
+			echo "v_login=($v_login), v_name=($v_name), v_lastname=($v_lastname), v_class_number=($v_class_number), v_class_letter=($v_class_letter)" > "$v_csv_folder_location/${v_login}.error"
+			continue
+		else
+			Log "byly nacteny promenne v_login=($v_login), v_name=($v_name), v_lastname=($v_lastname), v_class_number=($v_class_number), v_class_letter=($v_class_letter)"
+		fi
+
+		#nastaveni skupiny
+		declare -i v_class_year=$[$v_year_short - $v_class_number]
+		v_class_samba="${v_class_year}$v_class_letter"
+		RvLog "nactena trida pro sambu ($v_class_samba)"
+
+		v_ucitel_samba="${v_class_samba}_U"
+		RvLog "nactena skupina ucitelu pro sambu ($v_ucitel_samba)"
+
+		#kontrola skupiny pro tridu
+		if [ $(wbinfo -g | grep -c "$v_class_samba") -eq 0 ]
+		then
+			#zalozeni skupiny, pokud uz neexistuje
+			samba-tool group add "$v_class_samba"
+			RvLog "zalozena skupina ($v_class_samba)"
+			#navyseni hodnoty maximalniho gid number
+			((v_max_gid_number++))
+
+			#naplneni ldif souboru pro upravu skupiny
+			{
+				echo "#skupina $v_class_samba"
+				echo "dn: cn=$v_class_samba,cn=users,$v_domain_realm_ldap"
+				echo "changetype: modify"
+				echo "add: objectClass"
+				echo "objectClass: posixGroup"
+				echo "changetype: modify"
+				echo "add: gidNumber"
+				echo "gidNumber: $v_max_gid_number"
+				echo ""
+			} > "$v_csv_folder_location/$v_group_ldif_file"
+			#zaloha ldif souboru do spolecneho logu
+			cat "$v_csv_folder_location/$v_group_ldif_file" >> "$v_csv_folder_location/$v_group_ldif_log"
+
+			ldbmodify -H /var/lib/samba/private/sam.ldb "$v_csv_folder_location/$v_group_ldif_file"
+			RvLog "upraven databazovy zaznam pro skupinu ($v_class_samba)"
+
+			#kontrola vytvorene skupiny
+			if [ $(getent group "$v_max_gid_number" | wc -l) -ne 1 ]
+			then
+				LogError "POZOR, neco se nepovedlo pri pridavani skupiny ($v_class_samba) s uid ($v_max_gid_number)"
+			fi
+
+		fi
+
+		#kontrola skupiny pro ucitele
+		if [ $(wbinfo -g | grep -c "$v_ucitel_samba") -eq 0 ]
+		then
+			#zalozeni skupiny, pokud uz neexistuje
+			samba-tool group add "$v_ucitel_samba"
+			RvLog "zalozena skupina ($v_ucitel_samba)"
+			#navyseni hodnoty maximalniho gid number
+			((v_max_gid_number++))
+
+			#naplneni ldif souboru pro upravu skupiny ucitelu
+			{
+				echo "#skupina $v_ucitel_samba"
+				echo "dn: cn=$v_ucitel_samba,cn=users,$v_domain_realm_ldap"
+				echo "changetype: modify"
+				echo "add: objectClass"
+				echo "objectClass: posixGroup"
+				echo "changetype: modify"
+				echo "add: gidNumber"
+				echo "gidNumber: $v_max_gid_number"
+				echo ""
+			} > "$v_csv_folder_location/$v_group_ldif_file"
+			#zaloha ldif souboru do spolecneho logu
+			cat "$v_csv_folder_location/$v_group_ldif_file" >> "$v_csv_folder_location/$v_group_ldif_log"
+
+			#provede upravu databaze pomoci vytvoreneho ldif souboru
+			ldbmodify -H /var/lib/samba/private/sam.ldb "$v_csv_folder_location/$v_group_ldif_file"
+			RvLog "upraven databazovy zaznam pro skupinu ($v_ucitel_samba)"
+
+			#kontrola vytvorene skupiny
+			if [ $(getent group "$v_max_gid_number" | wc -l) -ne 1 ]
+			then
+				LogError "POZOR, neco se nepovedlo pri pridavani skupiny ($v_ucitel_samba) s uid ($v_max_gid_number)"
+			fi
+		fi
+
+		#kontrola slozky pro tridu
+		if [ "$v_class_year" -lt 10 ]
+		then
+			#pokud je cislo tridy jednomistne, prida se na zacatek nula
+			v_class_folder="/home/homes/STUDENTI/0${v_class_year}$v_class_letter_small"
+			if [ ! -d "$v_class_folder" ]
+			then
+				CheckDir "$v_class_folder"
+				setfacl --recursive --modify g:$v_class_samba:--x,g:$v_ucitel_samba:r-x,d:g:$v_ucitel_samba:r-x,g:domain\ users:--x,d:g:domain\ users:--- "$v_class_folder"
+				RvLog "nastavena prava pro slozku ($v_class_folder)"
+			fi
+		else
+			#pro dvoumistne cislo tridy se nula nepridava
+			v_class_folder="/home/homes/STUDENTI/${v_class_year}$v_class_letter_small"
+			if [ ! -d "$v_class_folder" ]
+			then
+				CheckDir "$v_class_folder"
+				setfacl --recursive --modify g:$v_class_samba:--x,g:$v_ucitel_samba:r-x,d:g:$v_ucitel_samba:r-x,g:domain\ users:--x,d:g:domain\ users:--- "$v_class_folder"
+				RvLog "nastavena prava pro slozku ($v_class_folder)"
+			fi
+		fi
+
+		#zalozeni uzivatele
+		samba-tool user create "$v_login" "$v_password"
+		RvLog "byl vytvoren uzivatel ($v_login) s heslem ($v_password)"
+		#vyrvoreni slozek s velkym userem
+		v_login_upper=$(echo $v_login | tr 'a-z' 'A-Z')
+		
+		#navyseni hodnoty maximalniho gid number
+		((v_max_uid_number++))
+
+		{
+			echo "#$v_name $v_lastname"
+			echo "dn: cn=$v_login,cn=users,$v_domain_realm_ldap"
+			echo "changetype: modify"
+			echo "replace: givenName"
+			echo "givenName: $v_name"
+			echo "changetype: modify"
+			echo "replace: sn"
+			echo "sn: $v_lastname"
+			echo "changetype: modify"
+			echo "replace: mail"
+			echo "mail: $v_login@$v_mail_domain"
+			echo "changetype: modify"
+			echo "replace: displayName"
+			echo "displayName: $v_lastname $v_name"
+			echo "changetype: modify"
+			echo "add: homeDrive"
+			echo "homeDrive: G:"
+			echo "changetype: modify"
+			echo "add: homeDirectory"
+			echo "homeDirectory: \\\\SERVER\\home\\STUDENTI\\${v_class_folder##*/}\\$v_login_upper"
+			echo "changetype: modify"
+			echo "add: scriptPath"
+			echo "scriptPath: _student.bat"
+			echo "changetype: modify"
+			echo "add: objectClass"
+			echo "objectClass: posixAccount"
+			echo "changetype: modify"
+			echo "add: uidNumber"
+			echo "uidNumber: $v_max_uid_number"
+			echo "changetype: modify"
+			echo "add: msSFU30Name"
+			echo "msSFU30Name: $v_login"
+			echo "changetype: modify"
+			echo "add: msSFU30NisDomain"
+			echo "msSFU30NisDomain: $v_netbios_domain"
+			echo "changetype: modify"
+			echo "add: gidNumber"
+			echo "gidNumber: 513"
+			echo "changetype: modify"
+			echo "add: unixHomeDirectory"
+			echo "unixHomeDirectory: $v_class_folder/$v_login_upper"
+			echo "changetype: modify"
+			echo "add: loginShell"
+			echo "loginShell: /bin/bash"
+			echo ""
+		} > "$v_csv_folder_location/$v_user_ldif_file"
+		cat "$v_csv_folder_location/$v_user_ldif_file" >> "$v_csv_folder_location/$v_user_ldif_log"
+
+		ldbmodify -H /var/lib/samba/private/sam.ldb "$v_csv_folder_location/$v_user_ldif_file"
+
+		#kontrola vytvoreneho uzivatele
+		if [ $(getent passwd "$v_max_uid_number" | wc -l) -ne 1 ]
+		then
+			LogError "POZOR, neco se nepovedlo pri pridavani uzivatele ($v_login) s uid ($v_max_uid_number)"
+			echo "v_login=($v_login), v_name=($v_name), v_lastname=($v_lastname), v_class_number=($v_class_number), v_class_letter=($v_class_letter)" > "$v_csv_folder_location/${v_login}.error"
+		fi
+
+		#kontrola uzivatelske slozky
+		CheckDir "$v_class_folder/$v_login_upper"
+		setfacl --recursive --modify u:$v_login:rwx,d:u:$v_login:rwx "$v_class_folder/$v_login_upper"
+		RvLog "nastaveno opravneni na slozce ($v_class_folder/$v_login_upper)"
+
+		#doplneni uzivatele do skupiny
+		samba-tool group addmembers "$v_class_samba" "$v_login"
+		RvLog "pridani uzivatele ($v_login) do skupiny ($v_class_samba)"
+
+	done < "$v_csv_file"
+fi

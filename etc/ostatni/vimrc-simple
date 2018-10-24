@@ -1,0 +1,42 @@
+if version >= 500
+" basics
+set nocompatible        " use Vim defaults
+set mouse=a             " make sure mouse is used in all cases.
+"colorscheme koehler
+set background=dark	" improve default color scheme
+set complete+=k         " enable dictionary completion
+"set completeopt+=longest
+set clipboard+=unnamed  " yank and copy to X clipboard
+set backspace=2         " full backspacing capabilities
+set history=100		" 100 lines of command line history
+set ruler               " ruler display in status line
+set showmode            " show mode at bottom of screen
+set cmdheight=2         " set the command height
+set showmatch           " show matching brackets (),{},[]
+set pastetoggle=<F2>	"disable auto intending when pasting text
+
+" wrap like other editors
+set wrap                " word wrap
+set textwidth=0         " 
+set lbr                 " line break
+"set display=lastline   " don't display @ with long paragraphs
+
+" backup settings
+set backup              " keep a backup file
+set backupdir=/share/MD0_DATA/backup/.vim	" inside ~/.vim/backup
+
+" searching
+set hlsearch            " highlight all search results
+set incsearch           " increment search
+set ignorecase          " case-insensitive search
+set smartcase           " upper-case sensitive search
+
+" syntax highlighting
+syntax on               " enable syntax highlighting
+
+" plug-in settings
+filetype plugin on
+filetype indent on
+
+set number
+endif

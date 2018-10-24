@@ -1,0 +1,236 @@
+#!/bin/bash
+#update-zabbix
+#script, ktery bude spousteny cronem a bude provadet nastavene kontroly na serveru
+
+
+#_zabbix_mysql
+#_zabbix_update
+#_aktualizace
+#_updateServer
+#_kontrola
+#_start_agent
+
+
+#_PROMENNE
+scriptName="update-zabbix"
+
+
+#v pripade, ze je script spousten ze slozky pracovni, nastavi se mu jine cesty, nez pri spusteni pres cron
+if [ "$(echo $PWD | grep -c pracovni)" -eq 0 ] && [ "$(echo $0 | grep -c pracovni)" -eq 0 ]
+then
+
+	#cesta ke scriptu
+	scriptDir="/usr/local/scripty"
+	verbose=0
+else
+
+	#cesta ke scriptu
+	scriptDir="/usr/local/scripty/pracovni"
+	verbose=1
+fi
+
+
+#_LOGOVANI
+
+#nacteni definice funkci Log,LogError,RvCheck,MailSend z knihovny
+. $scriptDir/funkce 
+
+
+#_PODMINKY
+Log "zacatek scriptu"
+echo "$$" > "$startFile"
+Log "($startFile) set to ($$)"
+
+
+#_KONFIGURACE
+
+#zapise konfiguracni soubor, ze ktereho bude nasledne nacitat hodnoty
+if [ -f "$configFile" ]
+then
+	#nacteni obsahu configfile
+	. "$configFile"
+	Log "nacten konfiguracni soubor ($configFile)"
+else
+	{
+	echo "disabled=0	#slouzi pro globalni, hromadne zruseni spousteni vsech scriptu ze slozky $scriptDir"
+	echo "recipient=\"\"	#email, na ktery se budou posilat pripadne problemy"
+	} > $configFile
+	Log "zapsan konfiguracni soubor pro server ($HOSTNAME)"
+	. "$configFile"
+fi
+
+#_parametry
+#-f vynuti na zabralu aktualizaci zabbix-serveru a zaroven udela touch na soubor $forceUpdateFile
+#to vynuti aktualizaci na zbytku serveru
+case "$1" in
+	-h|--help)
+		echo "-h|--help			vypise tuto napovedu"
+		echo "-f|--force		vynuti aktualizaci zabbix-serveru, pokud je nainstalovan"
+		exit 0
+		;;
+	-f|--force)
+		updateServer=1
+		;;
+	*)
+		updateServer=0
+		;;
+esac
+
+
+#nastavenim disabled na 1 se vypne spousteni scriptu, uprav $configFile, mail se neposila
+if [ "$disabled" -eq 1 ]
+then
+	Log "script byl disablovan v konfiguracnim souboru ($configFile)"
+	exit 0
+fi
+
+#_zabbix_mysql
+#doplneni userParametru pro kontrolu vytizeni cpu
+if [ -d /etc/zabbix/zabbix_agentd.d ] && [ ! -f /etc/zabbix/zabbix_agentd.d/mysqld.conf ]
+then
+	echo "UserParameter=mysqld,top -b -n 1 | sed '1,6d' | grep \"\<mysqld\>\" | awk '{print \$9}'" > /etc/zabbix/zabbix_agentd.d/mysqld.conf
+	service zabbix-agent restart > /dev/null
+fi
+
+
+#_zabbix_update
+#nainstaluje novejsi repozitar a zaktualizuje zabbix
+linuxVersion=$(uname -a |  sed -e 's/^.*\(el.\).*$/\1/g')
+zabbixVersion="3.2"
+forceUpdateFile="$scriptDir/update-zabbix-f"
+
+#pro nucenou aktualizaci zabbixu
+if [ $(find "$forceUpdateFile" -mtime -1 | wc -l) -ne 0 ]
+then
+	forceUpdate=1
+	LogError "vynucena aktualizace zabbixu"
+else
+	forceUpdate=0
+	Log "normalni prubeh, bez vynucene aktualizace"
+fi
+
+
+#_aktualizace
+#aktualizace jednotlivych soucasti zabbixu
+#pokud je Centos 5, pak se nic neaktualizuje, uz je tam prilis velkej problem s repozitarema
+if [ "$linuxVersion" != "el5" ]
+then
+	#kontroluje, zda uz je zabbix repozitar nainstalovany, nebo ne. Vycte si verzi z yumu
+	if [ $(yum info zabbix-release | grep Version | cut -d':' -f2 | sed -e 's/^\ //g') != "$zabbixVersion" ]
+	then
+		#repozitar se neshoduje s pozadovanym, bude nainstalovan
+		LogError "spousteni instalace repozitare zabbixu"
+		yum --enablerepo=zabbix* localinstall -y \
+			"/usr/local/scripty/repos/zabbix-release-${zabbixVersion}.${linuxVersion}.noarch.rpm"
+		RvLog "Nainstalovan repozitar zabbixu verze ($zabbixVersion) pro verzi Centosu ($linuxVersion)"
+		yum clean all
+		RvLog "provedeno vycisteni yumu"
+	else
+		Log "verze repozitare zabbixu je v poradku"
+	fi
+	
+	#projede vsechny verze balicku
+	if [ $(yum list installed | grep -e "^zabbix" | awk '{ print $2 }'\
+		| cut -c-3 | grep -c "$zabbixVersion") -eq 1 ] || [ "$forceUpdate" -eq 1 ]
+	then
+		LogError "verze nainstalovanych balicku neodpovida pozadavku, nebo je vynucena aktualizace"
+		yum -y --enablerepo=zabbix* update zabbix-agent zabbix-get
+		RvLog "provedena aktualizace agenta zabbixu"
+
+		#zabbix proxy se aktualizuje zvlast, aby se neinstalovala tam, kde neni
+		if [ $(yum list installed | grep -c "zabbix-proxy") -ge 1 ]
+		then
+			LogError "zabbix-proxy je nainstalovana, provede se aktualizace"
+			yum -y --enablerepo=zabbix* update zabbix-proxy zabbix-proxy-mysql
+			RvLog "provedena aktualizace balicku zabbix-proxy"
+		fi
+	fi
+fi
+
+
+#_updateServer
+#zabbix server se aktualizuje zvlast, aby se neinstaloval tam, kde neni a je vyjmuty z podminky
+#na vynucenou aktualizaci a kontrolu verze - musi byt zadan parametr -f
+if [ $(yum list installed | grep -c "zabbix-server") -ge 1 ] && [ "$updateServer" -eq 1 ]
+then
+	LogError "zabbix-server je nainstalovan - vynucena aktualizace provede se aktualizace"
+	yum -y --enablerepo=zabbix* update zabbix-web-mysql zabbix-server-mysql zabbix-sender
+	RvLog "provedena aktualizace balicku zabbix-proxy"
+	touch "$forceUpdateFile"
+fi
+
+
+#_kontrola
+#zkontroluje a upravi konfigurace jednotlivych soucasti zabbixu
+
+#pokud existuje konfiguracni soubor pro zabbix-proxy
+if [ -f /etc/zabbix/zabbix_proxy.conf ]
+then
+	#a pokud je v nem zminen monitoring
+	if [ $(grep -c "monitoring.comarr.cz" /etc/zabbix/zabbix_proxy.conf) -ne 0 ]
+	then
+		#kontrola parametru HistoryTextCacheSize na zacatku radku, pokud je nastaveny, tak ho smaze
+		if [ $(grep -ce "^HistoryTextCacheSize" /etc/zabbix/zabbix_proxy.conf) -ne 0 ]
+		then
+			sed -i -e 's/^HistoryTextCacheSize.*$//g' /etc/zabbix/zabbix_proxy.conf
+			RvLog "odstranena hodnosta HistoryTextCacheSize z /etc/zabbix/zabbix_proxy.conf"
+			restartctl zabbix-proxy
+			RvLog "nastartovana zabbix proxy"
+		fi
+
+		#kontrola, zda je zabbix-proxy v chkconfigu a existuje konfiguracni soubor pro proxy
+		if [ "$linuxVersion" != "el7" ]
+		then
+			#zkontroluje, zda zabbix-proxy je v chckconfigu
+			if [ $(chkconfig --list | grep -c zabbix-proxy) -eq 0 ]
+			then
+				#kdyz ne, tak ji prida
+				chkconfig --add zabbix-proxy
+				LogError "pridana zabbix-proxy do chkconfigu"
+			fi
+			#zkontroluje, zda zabbix-proxy je nastavena na autostart
+			if [ $(chkconfig --list | grep zabbix-proxy | grep -o "on" | wc -l) -lt 2 ]
+			then
+				chkconfig zabbix-proxy on
+				LogError "zapnuto automaticke spousteni zabbix-proxy"
+				service zabbix-proxy restart
+				RvLog "restartovana zabbix proxy"
+			fi
+
+			#zkontroluje, zda bezi zabbix-proxy
+			if service zabbix-proxy status &> /dev/null
+			then
+				:
+				Log "zabbix-proxy bezi"
+			else
+				service zabbix-proxy start
+				RvLog "nastartovana zastavena zabbix-proxy"
+			fi
+		#pro centos 7
+		else
+			#zkontroluje, zda je nastaveno automaticke startovani zabbix-proxy
+			if [ $(systemctl is-enabled zabbix-proxy | grep -c "disabled") -ne 0 ]
+			then
+				systemctl enable zabbix-proxy
+				RvLog "zapnuto automaticke spousteni zabbix-proxy"
+				systemctl restart zabbix-proxy
+				RvLog "restartovana zabbix-proxy"
+			fi
+			
+			#zkontroluje, zda bezi zabbix-proxy
+			if systemctl status zabbix-proxy &> /dev/null
+			then
+				:
+				Log "zabbix-proxy bezi"
+			else
+				systemctl start zabbix-proxy
+				RvLog "nastartovana zastavena zabbix-proxy"
+			fi
+		fi
+	fi
+fi
+
+
+#pokud je errorFile, posle mailem $logFile, jinak udela touch na stopFile
+MailSend
+exit 0

@@ -1,0 +1,123 @@
+#!/bin/bash
+#version 1.0
+
+v_projects_dir="$HOME/Documents/c++-projects" #cesta do slozky s c++ projektama
+v_vimrc_file="$v_projects_dir/.vimrc"	#cesta k upravenemu .vimrc
+
+#pri zadani -h vypise kratky help
+if [ "$1" = "-h" ]
+then
+	printf "\t%s\n" 	"Usage ./compile.sh [app_name.cpp]"\
+	"if file doesn't exist, it will create empty template"\
+	"if called without argument, it will try to find .cpp file in current dir"\
+	"one .cpp file will be processed automaticaly"\
+	"creates proper dirs, if not found, moves source file to them if not there already"\
+	"backups old files, needs backup script in \$PATH"
+	exit 0
+fi
+
+#pokud nebyl predan soubor s nazvem v parametru, zkusi najit jediny soubor v aktualnim adresari
+if [ -z "$1" ]
+then
+	echo "no arguments passed, looking for file"
+	v_file_search=$(find . -maxdepth 1 -mindepth 1 -type f | grep -c ".cpp")
+	case "$v_file_search" in 
+		1)
+			#pokud najde jeden soubor, zpracuje ho
+			v_source_file="$(ls | grep '.cpp')"
+			echo "file ($v_source_file) found, going to process it..."
+			;;
+		0)
+			#pokud najde vice, nebo mene nez jeden, zavola process -h pro napovedu
+			echo "error, no file passed as argument and no file found in current folder"
+			process -h
+			exit 1
+			;;
+		*)
+			echo "error, no file passed as argument and more than one file found in current folder"
+			process -h
+			exit 1
+			;;
+	esac
+else
+	#parametr predany pro zkompilovani
+	v_source_file="$1"
+	echo "argument passed to script ($1)"
+fi
+
+#pokud predany parametr obsahuje /, pak rozdeli parametr na cestu a soubor
+if [ $(echo "$v_source_file" | grep -c '/') -ne 0 ]
+then
+	echo "don't use absolute nor relative paths, just file name"
+	exit 1
+fi
+
+#nazev projektu se ziska odebranim pripony z nazvu souboru
+v_project_name="${v_source_file%.*}"
+
+if [ ! -f "$v_source_file" ]
+then
+	echo "($v_source_file) not found, creating empty template"
+	{
+	printf "%s\n" 	"/*"\
+			" * $v_project_name"\
+			" * Program description"\
+			" */"\
+			""\
+	 		"#include <iostream>"\
+			"using namespace std;"\
+			""\
+			"int main()"\
+			"{"\
+			"    //main function"\
+			""\
+			"return 0;"\
+			"}"
+	} > "$v_source_file"
+fi
+
+#promenne pro zdrojovy soubor
+v_src_dir="$v_projects_dir/src"
+v_src_target_dir="$v_src_dir/$v_project_name"
+v_src_target_file="$v_src_target_dir/$v_source_file"
+v_src_target_stdout="$v_src_target_dir/stdout.txt"
+
+#promenne pro zkompilovany soubor
+v_app_dir="$v_projects_dir/app"
+v_app_target_dir="$v_app_dir/$v_project_name"
+v_app_target_file="$v_app_target_dir/$v_project_name"
+
+#vytvoreni neexistujicich slozek pro zdroj a aplikaci
+mkdir -p "$v_app_target_dir/.backup"
+mkdir -p "$v_src_target_dir/.backup"
+
+#provede zalohu souboru pomoci scriptu backup
+cd "$v_app_target_dir"
+touch "$v_app_target_file"
+backup
+cd - > /dev/null
+
+cd "$v_src_target_dir"
+touch "$v_src_target_file"
+backup
+cd - > /dev/null
+
+#pokud v slozce se zdrojem neni nalinkovany .vimrc
+if [ ! -e "$v_src_target_dir/.vimrc" ]
+then
+	ln "$v_vimrc_file" "$v_src_target_dir"
+	echo "file ($v_vimrc_file) linked to ($v_src_target_dir)"
+fi
+
+#pokud neodpovida 
+if [ "$v_src_target_dir" != "$PWD" ]
+then
+	mv "$v_source_file" "$v_src_target_file"
+	echo "file ($v_source_file) moved to ($v_src_target_file)"
+fi
+
+cd "$v_src_target_dir"
+
+g++ -std=c++14 -o "$v_app_target_file" "$v_src_target_file" 2>&1 | tee "$v_src_target_stdout"
+echo "compilation completed"
+cd - > /dev/null

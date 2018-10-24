@@ -1,0 +1,49 @@
+#!/bin/bash
+#script na zmenu zabbix-proxy configu
+
+zabbixProxyConf="/etc/zabbix/zabbix_proxy.conf"
+
+#kontrola souboru
+if [ -f "$zabbixProxyConf" ]
+then
+	#zmena cetnosti nacitani configu zpet na hodinu
+	if [ $(grep -c "^ConfigFrequency=3600" "$zabbixProxyConf") -eq 0 ]
+	then
+		sed -i 's/^ConfigFrequency=.*/ConfigFrequency=3600/' "$zabbixProxyConf"
+	fi
+	
+	#navyseni poctu trapperu
+	if [ $(grep -c "^StartTrappers=10" "$zabbixProxyConf") -eq 0 ]
+	then
+		sed -i 's/.* StartTrappers=5/&\nStartTrappers=10/' "$zabbixProxyConf"
+	fi
+	
+	#navyseni poctu pingeru
+	if [ $(grep -c "^StartPingers=10" "$zabbixProxyConf") -eq 0 ]
+	then
+		sed -i 's/.* StartPingers=1/&\nStartPingers=10/' "$zabbixProxyConf"
+	fi
+	
+	#navyseni poctu httpPolleru
+	if [ $(grep -c "^StartHTTPPollers=5" "$zabbixProxyConf") -eq 0 ]
+	then
+		sed -i 's/.* StartHTTPPollers=1/&\nStartHTTPPollers=5/' "$zabbixProxyConf"
+	fi
+	
+	#navyseni cache CacheSize
+	if [ $(grep -c "^CacheSize=50M" "$zabbixProxyConf") -eq 0 ]
+	then
+		sed -i 's/.* CacheSize=8M/&\nCacheSize=50M/' "$zabbixProxyConf"
+	fi
+	
+	#navyseni Timeoutu
+	if [ $(grep -c "^Timeout=10" "$zabbixProxyConf") -eq 0 ]
+	then
+		sed -i 's/.* Timeout=3/&\nTimeout=10/' "$zabbixProxyConf"
+	fi
+	
+fi
+
+cat "$zabbixProxyConf" | grep -v '#'
+
+yum --enablerepo=zabbix* -y update zabbix-proxy-mysql zabbix-agent

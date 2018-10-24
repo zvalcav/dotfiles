@@ -1,0 +1,13 @@
+#!/bin/bash
+poruchyCount=0
+mailGroupCoung=$(samba-tool group list | grep -c "z\.")
+for group in $(samba-tool group list | grep "z\.")
+	do [ $(samba-tool group listmembers "$group" | grep -c "poruchy") -eq 1 ] && ((poruchyCount++)) || echo "$group"
+done
+
+if [ "$poruchyCount" -ne "$mailGroupCount" ]
+then 
+	echo "V nektere skupine chybi poruchy, viz vypis vyse"
+else 
+	echo "vsechny skupiny se zdaji byt OK"
+fi

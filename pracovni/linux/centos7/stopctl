@@ -1,0 +1,11 @@
+#!/bin/bash
+if [ -n "$1" ]
+then
+	echo "stoping $1"
+	systemctl stop "$1"
+	sleep 1
+	echo "status $1"
+	systemctl status "$1"
+else
+	echo "je potreba zadat nazev sluzby do parametru"
+fi

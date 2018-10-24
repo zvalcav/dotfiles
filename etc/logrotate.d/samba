@@ -1,0 +1,7 @@
+/var/log/samba/log.* {
+	copytruncate
+	weekly
+	compress
+	missingok
+	rotate 4
+}	

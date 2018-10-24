@@ -1,0 +1,72 @@
+dn: cn=obj_zvu_oss,cn=users,dc=workgroup,dc=local
+changetype: modify
+add: objectClass
+objectClass: posixGroup
+changetype: modify
+add: gidNumber
+gidNumber: 2004
+
+dn: cn=obj_zvu_gr,cn=users,dc=workgroup,dc=local
+changetype: modify
+add: objectClass
+objectClass: posixGroup
+changetype: modify
+add: gidNumber
+gidNumber: 2003
+
+dn: cn=obj_zvu_sm,cn=users,dc=workgroup,dc=local
+changetype: modify
+add: objectClass
+objectClass: posixGroup
+changetype: modify
+add: gidNumber
+gidNumber: 2005
+
+dn: cn=obj_zvu_bs,cn=users,dc=workgroup,dc=local
+changetype: modify
+add: objectClass
+objectClass: posixGroup
+changetype: modify
+add: gidNumber
+gidNumber: 2006
+
+dn: cn=obj_zvu_sas,cn=users,dc=workgroup,dc=local
+changetype: modify
+add: objectClass
+objectClass: posixGroup
+changetype: modify
+add: gidNumber
+gidNumber: 2008
+
+dn: cn=obj_zvu_peo,cn=users,dc=workgroup,dc=local
+changetype: modify
+add: objectClass
+objectClass: posixGroup
+changetype: modify
+add: gidNumber
+gidNumber: 2007
+
+dn: cn=eng_el_spotr,cn=users,dc=workgroup,dc=local
+changetype: modify
+add: objectClass
+objectClass: posixGroup
+changetype: modify
+add: gidNumber
+gidNumber: 2025
+
+dn: cn=eng_sl_o,cn=users,dc=workgroup,dc=local
+changetype: modify
+add: objectClass
+objectClass: posixGroup
+changetype: modify
+add: gidNumber
+gidNumber: 2058
+
+dn: cn=archiv_user,cn=users,dc=workgroup,dc=local
+changetype: modify
+add: objectClass
+objectClass: posixGroup
+changetype: modify
+add: gidNumber
+gidNumber: 2015
+

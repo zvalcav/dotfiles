@@ -1,0 +1,285 @@
+ControlMaster auto
+ControlPath ~/.ssh/control:%h:%p:%r
+CheckHostIp no
+HashKnownHosts no
+Host *
+	ServerAliveInterval 60
+
+Host monitoring.comarr.cz
+	Hostname monitoring.comarr.cz
+	port 22
+	user velp
+
+Host raalin.comarr.cz
+	Hostname raalin.comarr.cz
+	port 22
+	user velp
+
+Host gandalf.comarr.cz
+	Hostname gandalf.comarr.cz
+	port 22
+	user root
+
+Host second.comarr.cz
+	Hostname second.comarr.cz
+	port 22
+	user root
+
+Host ocsinventory-ng.comarr.cz
+	Hostname ocsinventory-ng.comarr.cz
+	port 22
+	user velp
+
+Host tapicka.comarr.cz
+	Hostname tapicka.comarr.cz
+	port 22
+	user velp
+
+Host delta02.delta-studenti.cz
+	Hostname delta02.delta-studenti.cz
+	port 22
+	user velp
+
+Host web.delta-studenti.cz
+	Hostname web.delta-studenti.cz
+	port 22
+	user velp
+
+Host gate.delta-skola.cz
+	Hostname gate.delta-skola.cz
+	port 22
+	user velp
+
+Host delta07.delta-studenti.cz
+	Hostname delta07.delta-studenti.cz
+	port 22
+	user velp
+
+Host smp.smp-pce.cz
+	Hostname gate.smp-pce.cz
+	port 2222
+	user velp
+
+Host aurora.troja.mff.cuni.cz
+	Hostname aurora.troja.mff.cuni.cz
+	user velp
+	port 22
+
+Host aurora2.troja.mff.cuni.cz
+	Hostname aurora2.troja.mff.cuni.cz
+	user velp
+	port 22
+
+Host bosko.salpce.local
+	Hostname 77.236.196.15
+	port 2221
+	user velp
+
+Host server.zsakrause.local
+	Hostname 93.181.104.116
+	user velp
+
+Host server.gjr.cz
+	Hostname gw.gjr.cz
+	port 2222
+	user velp
+
+Host zabbix.spektrum.local
+	Hostname 109.81.197.115
+	port 2222
+	user velp
+
+Host zabbix.vpsr.local
+	Hostname brana.vpsr.cz
+	port 2222
+	user velp
+
+Host bandit.autotechnik.cz
+	Hostname 213.29.199.171
+	port 22
+	user velp
+
+Host smejd.interhotellabe.cz
+	Hostname smejd.interhotellabe.cz
+	port 22
+	user velp
+
+Host ips.hoteljuno.cz
+	Hostname gate.hoteljuno.cz
+	port 22
+	user velp
+
+Host 90.182.120.131
+	Hostname 90.182.120.131
+	port 22
+	user velp
+
+Host zabbix.vakpce.cz
+	Hostname sgs.vakpce.cz
+	port 2225
+	user velp
+
+Host mali.maro.cz
+	Hostname gate.maro.cz
+	port 2222
+	user velp
+
+Host sam.comarr.cz
+	Hostname sam.comarr.cz
+	port 22
+	user velp
+
+Host nas22.comarr.cz
+	Hostname 192.168.100.12
+	port 22
+	user velp
+
+Host bilbo.comarr.cz
+	Hostname 90.182.120.140
+	port 22
+	user velp
+
+Host tp3.taskpool.cz
+	Hostname tp3.taskpool.cz
+	port 22
+	user velp
+
+Host tp3b.taskpool.cz
+	Hostname tp3b.taskpool.cz
+	port 22
+	user velp
+
+Host taskpool.net
+	Hostname taskpool.taskpool.net
+	port 22
+	user velp
+
+Host demo.taskpool.net
+	Hostname demo.taskpool.net
+	port 22
+	user velp
+
+Host intranet.zvu.cz
+	Hostname gate.zvu.cz
+	port 2222
+	user velp
+
+Host server.zsrybitvi.cz
+	Hostname 82.144.131.125
+	port 22
+	user velp
+
+Host era1.mkcr.local
+	Hostname 193.179.130.49
+	port 22
+	user velp
+
+Host era.comarr.cz
+	Hostname era.comarr.cz
+	port 22
+	user root
+
+Host zabbix.ioolb.cz
+	Hostname mail.ioolb.cz
+	port 2222
+	user velp
+
+Host era.tvar.cz
+	Hostname gate.tvar.cz
+	port 2224
+	user velp
+
+Host tvarc1.tvar.cz
+	Hostname gate.tvar.cz
+	port 2223
+	user velp
+
+Host era.akkmb.cz
+	Hostname 193.86.85.102
+	port 22
+	user root
+
+Host era.zvu.cz
+	Hostname gate.zvu.cz
+	port 2224
+	user root
+
+Host era.delta.local
+	Hostname gate.delta-skola.cz
+	port 2222
+	user root
+
+Host era.advokatijelinek.cz
+	Hostname mail.advokatijelinek.cz
+	port 2222
+	user root
+
+Host era.vakpce.cz
+	Hostname sgs.vakpce.cz
+	port 2224
+	user root
+
+Host era.vcd.cz
+	Hostname mail.vcd.cz
+	port 2224
+	user velp
+
+Host era.maro.cz
+	Hostname gate.maro.cz
+	port 2224
+	user root
+
+Host mdm.vakpce.cz
+	Hostname sgs.vakpce.cz
+	port 2223
+	user root
+
+Host mdm.zvu.cz
+	Hostname gate.zvu.cz
+	port 2223
+	user root
+
+Host pi.petriny.net
+	Hostname 213.192.26.26
+	port 2224
+	user velp
+
+Host vaclavz-nuc.vaclavz.local
+	Hostname 89.103.246.191
+	port 2224
+	user velp
+
+Host era.zzskhk.cz
+	Hostname 195.113.244.100
+	port 2224
+	user velp
+
+Host blin.taskpool.cz
+	Hostname blin.taskpool.cz
+	port 22
+	user velp
+
+Host synology.windsor.local
+	Hostname 185.4.201.2
+	port 2224
+	user admin
+
+Host pila2.hasici-elearning.cz
+	Hostname pila2.hasici-elearning.cz
+	port 22
+	user ioolb
+
+Host era.kontohk.cz
+	Hostname 90.182.184.38
+	port 2222
+	user velp
+
+Host tpe.taskpool.net
+	Hostname tpe.taskpool.net
+	port 2232
+	user velp
+
+Host tpc.taskpool.net
+	Hostname tpc.taskpool.net
+	port 2232
+	user velp

@@ -1,0 +1,59 @@
+#!/bin/bash
+#zkopiruj si soubor virtual users jinam
+#vyper z nej veskere radky, ktere jsou prazdne, nebo commenty
+#vyper z nej veskere mezery a tabulatory
+#oddeleni mezi mailem a userem udelej strednikem
+#pokud ma mail za sebou vic useru, tak ho zkopiruj na vic radku tak,
+#aby na kazdem radku s danym mailem byl pouze jeden z useru
+answer=""
+for line in $(cat ~/virtual-users)
+do 
+	mail=$(echo "$line" | cut -d';' -f1)
+	user=$(echo "$line" | cut -d';' -f2)
+	if [ $(postmap -q "$mail" ldap:/etc/postfix/ldap_aliases.cf | grep -c  "$user") -ne 1 ]
+	then
+		if [ -z "$answer" ]
+		then
+			echo "Pozor $mail neni zadan u uzivatele $user"
+			echo "(e)pridat maily vsech useru"
+			echo "(a)pridat k uzivateli email"
+			echo "(s)preskocit tento email"
+			echo "(b)prerusit cely script"
+			read answer
+		fi
+
+		case "$answer" in
+			a|A|e|E)
+				echo $(ldbsearch -H /var/lib/samba/private/sam.ldb samaccountname="$user" | grep dn:) > ~/mail.ldif
+				{
+					echo "changetype: modify"
+					echo "add: otherMailbox"
+					echo "otherMailbox: $mail"
+				} >> ~/mail.ldif
+		
+				ldbmodify -H /var/lib/samba/private/sam.ldb ~/mail.ldif
+				if [ "$?" -eq 0 ]
+				then
+					echo "OK, pridan mail $mail k uzivateli $user"
+				else
+					echo -e "\n\nERROR pri pridavani mailu $mail k uzivateli $user"
+				fi
+				if [ "$answer" = "a" ] || [ "$answer" = "A" ]
+				then
+					answer=""
+				fi
+				;;
+			s|S)
+				continue
+				;;
+			b|B)
+				break 2
+				;;
+			*)
+				echo "POZOR, vynechavam uzivatele $user"
+				;;
+			esac
+	else
+		echo "OK, $mail je u uzivatele $user jiz zadany"
+	fi
+done

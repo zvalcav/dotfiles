@@ -1,0 +1,398 @@
+#!/bin/bash
+#script pro preneseni dat z openldapu samby 3 do samby 4. Je potreba mit vyexportovany csv soubor ze samby 3 a zadat k nemu cestu do parametru skriptu -f soubor.csv
+
+#LIST _PROMENNE _FUNKCE _SOUBOR _DOTAZY _PROMENNE2 _KONVERZE _CSV
+
+#_PROMENNE
+#defaultne bez echo, pokud chces echo zapnout, pak dej scriptu parametr -v
+scriptDir="$HOME"	#cesta do slozky se scriptama
+verbose=1 		#pro ucely ladeni lze nastavit natvrdo hodnotu 1
+csvFile=0		#pro kontrolu, zda se nacetl csv soubor
+#unixHomeDirectory=/home #pro nastaveni domovskeho adresare na linuxu
+#netbiosName=SERVER	pro poskladani cesty k home directory atd
+shareName=home		# -||-
+#domain			#promena je nastavena pres read a pres sed nasledne upravena pro ldap zaznamy
+minUid=1000		#nebude sahat na uzivatele s nizsim uid nez je dana hodnota
+#exportDir		#slozka, kam se vyexportuje vse potrebne
+
+exitHelp=1			#pokud byl zadan parametr -h
+exitNoParam=2			#pokud neni zadan parametr pri spousteni scriptu
+exitNoFile=3			#pokud nebyl zadan zadny soubor v parametru
+exitFileNotExist=4		#pokud byl nacten parametr do souboru, ale neodkazuje se na platny soubor
+exitDomainNotSet=5		#pokud byl zadan neznamy parametr a nejedna se o soubor
+exitInvalidFile=6		#pokud zadany csv soubor neobsahuje prvni radek s popisem
+exitPeopleNotCreated=7		#pokud se nevytvoril pracovni soubor people.csv
+exitDelimiterNotUnique=8	#pokud se v csv souboru nekde vyskytuje strednik
+
+#_FUNKCE
+#funkce a opakovane prikazy, vola se pomoci log "pozadovany text pro zalogovani"
+log()
+{
+	#provede zapis predaneho parametru do logu (/var/log/messages)
+	[ -n "$1" ] && logger -t ldap-transfer "$1" || logger -t ldap-transfer "ERROR - funkce log volana bez parametru"
+	[ "$verbose" = 1 ] && echo "samba: $1"
+}
+
+logerror()
+{
+	#provede ERROR zapis predaneho parametru do logu (/var/log/messages)
+	[ -n "$1" ] && logger -t ldap-transfer "ERROR - $1" || logger -t ldap-transfer "ERROR - funkce logerror volana bez parametru"
+	echo "ldap-transfer ERROR: $1"
+
+}
+
+getIndex()
+{
+	if [ -n "$1" ] #pokud byla funkci getindex predana hodnota, pak najde jeji index
+	then
+		count=0
+		for desc in "${descriptionArray[@]}"
+		do
+			#[[ "$desc" == "$1" ]] && descriptionIndex=$count && break
+			[[ "$desc" == "$1" ]] && index=$count && break
+			((++count))
+		done
+	else
+		logerror "funkce get byla zavolana bez parametru"
+	fi
+}
+
+
+#_SOUBOR
+echo "pro spravnou funkci je potreba nahrat exportovany csv soubor z lamu do slozky $scriptDir/export."
+echo "je csv soubor na miste? (y/n)"
+read csvReady
+
+if [ "$csvReady" = "y" ] || [ "$csvReady" = "Y" ]
+then
+	log "potvrzeno nahrani souboru, provedu jeho zpracovani"
+else
+	logerror "soubor nebyl nahran, je potreba nahrat soubor do adresare $scriptDir/export"
+	exit $exitNoFile
+fi
+
+#nacteni souboru ze slozky export
+if [ "$(find $scriptDir/export -maxdepth 1 -type f | grep -c ".csv")" -eq 1 ]
+then
+	csvFile="$(find $scriptDir/export -maxdepth 1 -type f | grep ".csv")"
+	log "nacten soubor ($csvFile)"
+else
+	logerror "soubor nenalezen, je potreba skutecne nahrat soubor do slozky $scriptDir/export"
+	exit $exitFileNotExist
+fi
+
+#_DOTAZY
+#zepta se na netbiosName
+echo -e "\nzadej NETBIOS nazev serveru. Velymi pismeny napr (GANDALF). default [SERVER]:"
+read netbiosName
+
+if [ -n "$netbiosName" ]
+then
+	log "zadan novy NETBIOS nazev serveru ($netbiosName)"
+else
+	netbiosName="SERVER"
+	log "zachovan defaultni nazev serveru ($netbiosName)"
+fi
+
+#zepta se na nazev domeny, pak si ji automaticky rozdeli na dve casti kvuli nasypani do ldif souboru
+echo -e "\nzadej domenu, napr. (domena.local) (domena.cz - pozor na problemy s dns):"
+read domain
+if [ -n "$domain" ]
+then
+	domainLdap=$(echo $domain | sed -e 's/^/dc=/g' -e 's/\./,dc=/g')
+	log "byla zadana domena ($domain)"
+	log "vytvoren zaznam ($domainLdap)"
+else
+	logerror "je nutno vyplnit domenu domena.local, (domena.cz - pozor na problemy s dns) atd ($domain)"
+	exit $exitDomainNotSet
+fi
+
+#zepta se na unixovou cestu do domovskeho adresare
+echo -e "\nzadej unixovou cestu do domovskeho adresare. default [/home/homes]:"
+read unixHomeDirectory
+
+if [ -n "$unixHomeDirectory" ]
+then
+	log "zadana nova cesta do domovskeho adresare ($unixHomeDirectory)"
+else
+	unixHomeDirectory="/home/homes"
+	log "cesta do domovskeho adresare zustava defaultni ($unixHomeDirectory)"
+fi
+
+
+
+#zepta se na zmenu domovskeho adresare a cestu, nebo na smazani cestovniho profilu
+echo -e "\nchces zmenit profily uzivatelu na \\\\$netbiosName\\$shareName\\uzivatel(\\profiles)?"
+echo -e "y - zmenit\nd - vymazat cesty k cestovnim profilum (zrusit je)\nn - nechat je ve stavu po prenosu"
+read doChangeProfile
+case $doChangeProfile in
+	y|Y)
+		pathChange=1
+		log "cesta k cestovnimu profilu a domovskemu adresari bude ZMENENA pomoci scriptu"
+		;;
+	d|D)
+		pathChange=1
+		profileDel=1
+		log "cesta k cestovnimu profilu bude VYMAZANA a k domovskemu adresari ZMENENA pomoci scriptu"
+		;;
+	*)
+		pathChange=0
+		log "cesta k cestovnimu profilu bude zachovana tak, jak ji prenesla samba pri upgradu"
+		;;
+esac
+sleep 2
+
+#_PROMENNE2
+exportDir="$scriptDir/export/$(echo $netbiosName | tr 'A-Z' 'a-z' ).$domain" #slozka kam se vyexportuji zaznamy
+[ ! -d "$exportDir" ] && mkdir -p $exportDir #pokud jeste neni slozka pro dany server, tak ji vytvori
+tmpFile="$exportDir/people.csv"	#pracovni soubor, kam se zapisi pracovni data
+
+#_KONVERZE
+log "zacinam s konverzi pomoci $0"
+
+#_CSV
+#prvni radek se nacte do pole descriptionArray
+descriptionArray=( $(head -1 $csvFile | sed -e 's/^"//g' -e 's/","/ /g' -e 's/"$//g') )
+
+log "nacteny hodnoty prvniho radku do pole descriptionArray"
+
+
+if [[ "${descriptionArray[0]}" != "dn" ]] #pokud prvni zaznam obsahuje "dn", pak je snad vse ok
+then
+	logerror "v souboru $csvFile neodpovida prvni radek, musi obsahovat popis tabulky (${descriptionArray[0]})"
+	exit $exitInvalidFile
+fi
+
+#pole pro vzajemne kombinace, nahrazuji spousty promennych
+exportArray=( cn sn uid mail sambaHomeDrive givenName mailRoutingAddress mailLocalAddress uidNumber)
+#importArray=( userPrincipalName sAMAccountName givenName sn displayName mail otherMailbox unixHomeDirectory homeDirectory !!aliasy!!)
+
+indexCount=0
+for export in "${exportArray[@]}"	#dvojity cyklus, ktery vezme kazdou polozku z rucne vyplneneho seznamu nacitanych sloupcu a priradi ke kazdemu prislusnou ciselnou hodnotu
+do
+	descriptionCount=0
+	for description in "${descriptionArray[@]}"
+	do
+		if [[ "$export" == "$description" ]]
+		then
+			indexArray[$indexCount]="$descriptionCount"	#ciselne hodnoty se ukladaji do pole index array
+			break		#prerusi aktualni cyklus
+		fi
+		((++descriptionCount))
+	done
+	((++indexCount))
+done
+
+
+indexString=$(echo -n "${indexArray[@]}" | sed -e 's/ /,/g') #slouzi pro filtrovani cutem
+log "nacteny indexove hodnoty pozadovanych sloupcu pro export"
+log "$indexString"
+
+
+if [ "$(grep -c ";" $csvFile)" != 0 ] 	#prohleda soubor a zkontroluje, jestli obsahuje strednik
+then 
+	logerror "v souboru je strednik, zkontroluj a uprav soubor"
+	exit $exitDelimiterNotUnique
+fi
+
+
+#head -1 $csvFile | sed -e 's/","/";"/g' | cut -d';' -f2- > $tmpFile
+cat $csvFile | grep -i "person" | sed -e 's/","/";"/g' | cut -d';' -f2- > $tmpFile	#vyfiltruje zaznamy uzivatelu a zapise je do pracovniho souboru, nahradi "," ";" pro lepsi filtrovani cutem
+[ ! -e $tmpfile ] && exit $exitPeopleNotCreated		#pokud se soubor nevytvoril, tak koncime
+
+log "vytvoren pracovni soubor $tmpFile obsahujici zaznamy uzivatelu ze souboru $csvFile"
+
+
+: > $exportDir/final-export.ldif	#provede vysisteni souboru cistsim zpusobem bez subshellu
+: > $exportDir/virtual-users
+: > $exportDir/error.log
+log "vytvoreny prazdne finalni soubory $exportDir/final-export.ldif a virtual-users"
+
+
+#exportArray=( cn sn uid mail sambaHomeDrive givenName mailRoutingAddress mailLocalAddress )
+#importArray=( userPrincipalName sAMAccountName givenName sn displayName mail otherMailbox unixHomeDirectory homeDirectory profilePath)
+
+log "spoustim smycky pro vytvoreni souboru"
+
+while read line
+do
+	getIndex cn
+	cn=$(echo $line | cut -d';' -f"$index" | sed -e 's/"//g')
+	getIndex sn
+	sn=$(echo $line | cut -d';' -f"$index" | sed -e 's/"//g')
+	getIndex uid
+	uid=$(echo $line | cut -d';' -f"$index" | sed -e 's/"//g')
+	getIndex mail
+	mail=$(echo $line | cut -d';' -f"$index" | sed -e 's/"//g')
+	getIndex givenName
+	givenName=$(echo $line | cut -d';' -f"$index" | sed -e 's/"//g')
+	getIndex mailRoutingAddress
+	mailRoutingAddress=$(echo $line | cut -d';' -f"$index" | sed -e 's/"//g')
+	getIndex mailLocalAddress
+	mailLocalAddress=( $(echo $line | cut -d';' -f"$index" | sed -e 's/ | / /g' | sed -e 's/"//g') )
+	getIndex uidNumber
+	uidNumber=$(echo $line | cut -d';' -f"$index" | sed -e 's/"//g')
+	log "zpracovavam uzivatele $uidNumber - $uid"
+	
+	if [ "$uidNumber" -gt "$minUid" ]	#zapisuje pouze uzivatele, kteri maji uidNumber vetsi nez danou hodnotu
+	then	
+	{
+		if [ -n "$cn" ]		#vypise jmeno uzivatele jako comment
+		then
+			echo "#$cn"
+			echo "#$cn" >> $exportDir/error.log
+		else
+			echo "ERROR - nebyla nactena promenna \$cn" >> $exportDir/error.log
+		fi
+		if [ -n "$uid" ]	#zaznam dn pro urceni cile
+		then
+			echo "dn: cn=$uid,cn=users,$domainLdap"
+		fi
+                if [ -n "$uid" ]	#zaznam pro userPrincipalName - login do active directory domeny
+                then
+			echo "changetype: modify"
+			echo "replace: userPrincipalName"
+			echo "userPrincipalName: $uid@$domain"
+		else
+			echo "ERROR - nebyla nactena promenna \$uid" >> $exportDir/error.log
+		fi
+                if [ -n "$uid" ]	#zaznam sAMAcountName - login do 2000- domeny
+                then
+			echo "changetype: modify"
+			echo "replace: sAMAccountName"
+			echo "sAMAccountName: $uid"
+		fi
+		if [ -n "$givenName" ]	#krestni jmeno
+                then
+			echo "changetype: modify"
+			echo "replace: givenName"
+			echo "givenName: $givenName"
+		else
+			echo "ERROR - nebyla nactena promenna \$givenName" >> $exportDir/error.log
+		fi
+		if [ -n "$sn" ]		#prijmeni
+                then
+			echo "changetype: modify"
+			echo "replace: sn"
+			echo "sn: $sn"
+		else
+			echo "ERROR - nebyla nactena promenna \$sn" >> $exportDir/error.log
+		fi
+		if [ -n "$cn" ]		#vetsinou cele jmeno, ktere se ma zobrazovat
+                then
+			echo "changetype: modify"
+			echo "replace: displayName"
+			echo "displayName: $cn"
+		fi
+		if [ -n "$mail" ]	#primarni email, mel by byt ve tvaru jmeno.prijmeni@domena.domena2
+		then
+			echo "changetype: modify"
+			echo "replace: mail"
+			echo "mail: $mail"
+		else
+			echo "ERROR - nebyla nactena promenna \$mail" >> $exportDir/error.log
+		fi
+		if [ -n "$mailRoutingAddress" ]	#otherMailbox, sekundarni email, nastaveny na hodnotu vychoziho mailu ze samby3
+                then
+			echo "changetype: modify"
+			echo "replace: otherMailbox"
+			echo "otherMailbox: $mailRoutingAddress"
+		else
+			echo "ERROR - nebyla nactena promenna \$mailRoutingAddress" >> $exportDir/error.log
+		fi
+		if [ -n "$uid" ]	#domovska unixova slozka, vetsinou netreba, prepisuje se pres wildcard v smb.conf
+		then
+			echo "changetype: modify"
+			echo "replace: unixHomeDirectory"
+			echo "unixHomeDirectory: $unixHomeDirectory/$uid"
+		fi
+		if [ -n "$uid" -a "$pathChange" = "1" ]	#windowsova domovska slozka, sklada se z \\$netbiosName\$shareName\$uid
+                then
+			echo "changetype: modify"
+			echo "replace: homeDirectory"
+			echo "homeDirectory: \\\\$netbiosName\\$shareName\\$uid"
+        	fi
+		if [ -n "$uid" -a "$pathChange" = "1" -a "$profileDel" != "1" ]	#windowsovy cestovni profil, sklada se z \\$netbiosName\$shareName\$uid\profiles
+                then
+			echo "changetype: modify"
+			echo "replace: profilePath"
+			echo "profilePath: \\\\$netbiosName\\$shareName\\$uid\\profiles"
+		fi
+		if [ "$profileDel" = "1" ]	#smaze windowsovy cestovni profil
+                then
+			echo "changetype: modify"
+			echo "delete: profilePath"
+		fi
+
+		echo -e "" 
+	} >> $exportDir/final-export.ldif
+	else 
+		log "vynechavam uzivatele $uidNumber - $uid"
+	fi
+
+	if [ "$uidNumber" -gt "$minUid" ]	#zapis mailovych aliasu do souboru virtual-users, pouze pro uzivatele s uidNumber vyssim, nez dana hodnota
+	then
+		if [ "${#mailLocalAddress[@]}" -gt 0 ] #nezapisuje nic pro uzivatele bez aliasu
+		then
+			{
+			echo "#$cn"
+			echo "$mailRoutingAddress	$uid"
+			for i in "${mailLocalAddress[@]}"
+			do
+				echo "$i	$uid"
+			done
+			echo -e ""
+			} >> $exportDir/virtual-users
+		else
+			log "vynechavam aliasy pro uzivatele $cn"
+		fi
+	else
+		log "vynechavam uzivatele $uidNumber - $uid"
+	fi
+
+done < $tmpFile 
+
+#kontrola erroru z prenosu
+errorCount="$(grep -c "ERROR" $exportDir/error.log)"
+if [ "$errorCount" != "0" ]
+then
+	echo -e "\n POZOR BYLO NALEZENO $errorCount ERRORU PRI VYTVARENI LDIF SOUBORU"
+	echo -e "\nMam errory vypsat? (y/n)"
+	read errorCat
+	if  [ "$errorCat" = "y" ] || [ "$errorCat" = "Y" ]
+	then
+		echo -e "\nNasleduje vypis erroru pri konverzi"
+		cat $exportDir/error.log
+	fi
+fi
+
+################### KONEC ##################################
+echo -e "\nkonec konverze, mam provest import do samby4? (y/n)"
+read doImport
+
+if  [ "$doImport" = "y" ] || [ "$doImport" = "Y" ]
+then
+	service sernet-samba-ad stop
+	ldbmodify -H /var/lib/samba/private/sam.ldb $exportDir/final-export.ldif
+	log "provedeno nahrani souboru do databaze, zkontroluj si vypis procesu"
+	service sernet-samba-ad start
+	duplicity=$(sort $exportDir/virtual-users | sed -e '/^$/d' | uniq -c | sed -e 's/^\s*\([0-9]*\) .*$/\1/g' | sort | uniq -c | sed -e 's/^\s*//g' | cut -d' ' -f2 | wc -l)
+	if [ "$duplicity" = "1" ]
+	then
+		cp $exportDir/virtual-users /etc/postfix/
+		postmap /etc/postfix/virtual-users
+		log "seznam emailu je bez duplicit, byl zkopirovan do postfixu a vytvorena databaze"
+	else
+		logerror "seznam mailu obsahuje duplicity, je potreba to zkontrolovat"
+		echo "vim $exportDir/virtual-users"
+		cat $exportDir/virtual-users | cut -d$'\t' -f1 | sort | sed -e '/^$/d' | uniq -c | sed -e '/^\s*1 /d' 
+	fi
+else
+	log "nebyl zkopirovan ani soubor virtual-users a proveden na nem postmap"
+	log "konverze byla dokoncena, ale nebyla importovana do databaze, pripadny import se provede prikazem"
+	echo "ldbmodify -H /var/lib/samba/private/sam.ldb $exportDir/final-export.ldif"
+	echo "cp $exportDir/virtual-users /etc/postfix/"
+	echo "postmap /etc/postfix/virtual-users"
+fi
+
+exit 0

@@ -1,0 +1,46 @@
+#!/bin/bash
+case "$1" in
+	-h)
+		printf "%s\n" "slouzi pro snadne vytvoreni ftp uzivatele"\
+			"usage: userftpadd [username]"\
+			"lze spoustet bud samostatne useraddftp"\
+			"nebo rovnou s parametrem userftpadd franta"
+		exit 0
+		;;
+	"")
+		while [ -z "$v_user_name" ]
+		do
+			read -p "zadej uzivatelske jmeno pro pridani:" v_user_name
+		done
+		;;
+	*)
+		v_user_name="$1"
+		;;
+esac
+
+echo "Zadano uzivatelske jmeno $v_user_name"
+
+#overeni uzivatele, pokud exituje, tak nic nedela
+id "$v_user_name" > /dev/null 2>&1
+if [ "$?" -ne 0 ]
+then
+	#vytvoreni uzivatele s domovskou slozkou
+	useradd -d /var/www/html/"$v_user_name" -s /sbin/nologin "$v_user_name"
+	echo "vytvoren uzivatel $v_user_name"
+
+	#nastaveni opravneni pro read v domovske slozce pro others, aby tam mohl apache
+	chmod -R o+rx /var/www/html/"$v_user_name"
+	echo "vytvorena a nastavena domovska slozka /var/www/html/$v_user_name"
+
+	find /var/www/html/"$v_user_name" -type f -exec rm {} \;	
+	echo "odstraneny defaultni soubory z domovske slozky uzivatele $v_user_name"
+
+	mkdir /var/www/html/"$v_user_name"/sql
+	chomd o-rwx /var/www/html/"$v_user_name"/sql
+	echo "vytvorena slozka sql v home uzivatele ($v_user_name) a odebrana prava pro others"
+
+	passwd "$v_user_name"
+	echo "nastaveno heslo pro uzivatele $v_user_name"
+else
+	echo "POZOR, zadany uzivatel jiz existuje"
+fi

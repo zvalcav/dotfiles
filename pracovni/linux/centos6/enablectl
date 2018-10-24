@@ -1,0 +1,10 @@
+#!/bin/bash
+if [ -n "$1" ]
+then
+	echo "enabling $1"
+	chkconfig "$1" on
+	echo "listing $1"
+	chkconfig "$1" --list
+else
+	echo "je potreba zadat nazev sluzby do parametru"
+fi

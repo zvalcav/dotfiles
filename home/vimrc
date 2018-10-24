@@ -1,0 +1,82 @@
+if version >= 500
+	" basics
+	set nocompatible		" use Vim defaults
+	set encoding=utf-8		" use UTF-8 encoding
+	set fileencoding=utf-8  " use UTF-8 encoding to write files
+	set mouse=a				" make sure mouse is used in all cases.
+	set background=dark		" improve default color scheme
+	set complete+=k			" enable dictionary completion
+	set completeopt=menuone	" enable completion menu for one item
+	set clipboard+=unnamed	" yank and copy to X clipboard
+	set backspace=2			" full backspacing capabilities
+	set history=256			" 256 lines of command line history
+	set ruler				" ruler display in status line
+	set showmode			" show mode at bottom of screen
+	set showcmd				" show mode at bottom of screen
+	set showmatch			" show matching brackets (),{},[]
+	set pastetoggle=<F2>	" disable auto intending when pasting text
+	set number				" display row numbers
+	set laststatus=2		" permanently display status line
+	set timeoutlen=250		" Time to wait after ESC (default causes an annoying delay)
+
+	" wrap like other editors
+	" set wrap				" word wrap
+	" set textwidth=0
+	" set lbr				" line break
+	" set display=lastline	" don't display @ with long paragraphs
+
+	" backup settings
+	" set backup			" keep a backup file
+	" set backupdir=/var/backup/vim
+
+	" searching
+	set hlsearch			" highlight all search results
+	set incsearch			" increment search
+	set ignorecase			" case-insensitive search
+	set smartcase			" upper-case sensitive search
+
+	" syntax highlighting
+	syntax on				" enable syntax highlighting
+	set magic				" enable extended regular expressions
+
+	" plug-in settings
+	filetype plugin on
+	filetype indent on
+
+	" disable replace mode on insert double press
+	imap <Insert> <Nop>
+	inoremap <S-Insert> <Insert>
+
+	" tab customizations
+	set shiftround			" round indent to multiple of 'shiftwidth'
+	set autoindent			" align the new line indent with the previous line
+	set shiftwidth=4		" operation >> indents 4 columns; << unindents 4 columns
+	set tabstop=4			" a hard TAB displays as 4 columns
+	set softtabstop=4		" insert/delete 4 spaces when hitting a TAB/BACKSPACE
+	set smarttab			" deletes whole inserted tab
+	" set expandtab			" insert spaces when hitting TABs
+
+	" fold cutomizations
+	set foldmethod=indent
+	set foldlevel=99
+
+	" custom windows switching
+	map <c-j> <c-w>j		" press ctrl + j to switch to down windows
+	map <c-k> <c-w>k		" press ctrl + k to switch to top windows
+	map <c-l> <c-w>l		" press ctrl + l to switch to right windows
+	map <c-h> <c-w>h		" press ctrl + h to switch to left windows
+
+	" highlight long lines
+	" marks black all characters exceeding limit of 110 on each line
+	
+	"augroup vimrc_autocmds
+	"	autocmd BufEnter * highlight OverLength ctermbg=darkgrey guibg=#599959
+	"	autocmd BufEnter * match OverLength /\%110v.*/
+	"augroup END
+
+	"additional cofig file
+	if filereadable(" ~/.vim/vimrc" )
+	  so ~/.vim/vimrc
+	endif
+
+endif
