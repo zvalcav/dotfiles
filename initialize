@@ -23,8 +23,6 @@ fi
 #spousti se pouze pod rootem
 if [ "$UID" -eq 0 ]
 then
-	CheckDir "$logDir"
-
 	# pokud jeste neexistuje slozka se scripty, provede klonovani repozitare
 	if [ ! -d "$scriptDir" ]
 	then
@@ -47,9 +45,12 @@ fi
 #_LOGOVANI
 # nacteni konfiguracniho souboru s funkcemi
 . "$scriptDir/funkce"
-Log "Zacatek scriptu"
 
 CheckDir "$pidDir"
+CheckDir "$logDir"
+
+Log "Zacatek scriptu"
+
 echo "$$" > "$startFile"
 RvLog "start file set to ($$)"
 
