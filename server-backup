@@ -86,7 +86,7 @@ then
 	#vytvori radek, ktery spousti dany script ve 20:00 a kompletni debug vystup se uklada do souboru ve /var/log
 	{ 
 		echo "#denni spousteni server-backup"
-		echo "0 20 * * * root $sbinDir/server-backup &>$outputFile"
+		echo "0 22 * * * root $sbinDir/server-backup &>$outputFile"
 	} > /etc/cron.d/server-backup
 	RvLog "zapsano spousteni server-backup scriptu do cronu roota"
 fi
