@@ -9,7 +9,7 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
 endif
 set shortmess=aoO
 badd +1 backup
-badd +92 check-server
+badd +77 check-server
 badd +2 debug
 badd +10 funkce
 badd +36 initialize
@@ -23,17 +23,17 @@ badd +1 etc
 argglobal
 silent! argdel *
 argadd backup
-argadd zabbix-backup
-argadd server-rsync-backup
-argadd server-backup
-argadd rsync-backup
-argadd postgresql-backup
-argadd mysql-backup
-argadd initialize
-argadd funkce
-argadd etc
-argadd debug
 argadd check-server
+argadd debug
+argadd etc
+argadd funkce
+argadd initialize
+argadd mysql-backup
+argadd postgresql-backup
+argadd rsync-backup
+argadd server-backup
+argadd server-rsync-backup
+argadd zabbix-backup
 set stal=2
 edit backup
 set splitbelow splitright
@@ -80,7 +80,7 @@ exe s:l
 normal! zt
 36
 normal! 09|
-tabedit check-server
+tabedit zabbix-backup
 set splitbelow splitright
 set nosplitbelow
 set nosplitright
@@ -103,7 +103,7 @@ normal! zt
 77
 normal! 0
 lcd /mnt/ssd/Sync/Programming/bash-scripts
-tabedit /mnt/ssd/Sync/Programming/bash-scripts/debug
+tabedit /mnt/ssd/Sync/Programming/bash-scripts/server-rsync-backup
 set splitbelow splitright
 set nosplitbelow
 set nosplitright
@@ -150,7 +150,7 @@ normal! zt
 10
 normal! 024|
 lcd /mnt/ssd/Sync/Programming/bash-scripts
-tabedit /mnt/ssd/Sync/Programming/bash-scripts/initialize
+tabedit /mnt/ssd/Sync/Programming/bash-scripts/postgresql-backup
 set splitbelow splitright
 set nosplitbelow
 set nosplitright
@@ -195,16 +195,14 @@ normal! zo
 normal! zo
 107
 normal! zo
-115
-normal! zo
-let s:l = 109 - ((39 * winheight(0) + 32) / 65)
+let s:l = 169 - ((62 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-109
+169
 normal! 0
 lcd /mnt/ssd/Sync/Programming/bash-scripts
-tabedit /mnt/ssd/Sync/Programming/bash-scripts/server-rsync-backup
+tabedit /mnt/ssd/Sync/Programming/bash-scripts/debug
 set splitbelow splitright
 set nosplitbelow
 set nosplitright
@@ -227,7 +225,7 @@ normal! zt
 23
 normal! 0
 lcd /mnt/ssd/Sync/Programming/bash-scripts
-tabedit /mnt/ssd/Sync/Programming/bash-scripts/zabbix-backup
+tabedit /mnt/ssd/Sync/Programming/bash-scripts/check-server
 set splitbelow splitright
 set nosplitbelow
 set nosplitright
