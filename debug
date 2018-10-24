@@ -1,4 +1,5 @@
 #!/bin/bash
+# script pro debugovani jinych scriptu - vola je pomoci bash -x script-name
 
 debugDir="/var/log/debug"
 

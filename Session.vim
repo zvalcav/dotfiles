@@ -8,31 +8,31 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 set shortmess=aoO
-badd +0 backup
-badd +0 check-server
-badd +0 debug
-badd +1 funkce
+badd +1 backup
+badd +1 check-server
+badd +1 debug
+badd +224 funkce
 badd +1 initialize
-badd +0 mysql-backup
-badd +0 postgresql-backup
-badd +0 rsync-backup
-badd +0 server-backup
-badd +0 server-rsync-backup
-badd +0 zabbix-backup
+badd +1 mysql-backup
+badd +1 postgresql-backup
+badd +1 rsync-backup
+badd +1 server-backup
+badd +1 server-rsync-backup
+badd +1 zabbix-backup
 argglobal
 silent! argdel *
 argadd backup
-argadd check-server
-argadd debug
-argadd etc
-argadd funkce
-argadd initialize
-argadd mysql-backup
-argadd postgresql-backup
-argadd rsync-backup
-argadd server-backup
-argadd server-rsync-backup
 argadd zabbix-backup
+argadd server-rsync-backup
+argadd server-backup
+argadd rsync-backup
+argadd postgresql-backup
+argadd mysql-backup
+argadd initialize
+argadd funkce
+argadd etc
+argadd debug
+argadd check-server
 set stal=2
 edit backup
 set splitbelow splitright
@@ -62,7 +62,7 @@ set nosplitright
 wincmd t
 set winheight=1 winwidth=1
 argglobal
-2argu
+12argu
 setlocal fdm=indent
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -71,20 +71,25 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 1 - ((0 * winheight(0) + 33) / 66)
+82
+normal! zo
+102
+normal! zo
+let s:l = 92 - ((52 * winheight(0) + 33) / 66)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-1
-normal! 0
-tabedit debug
+92
+normal! 035|
+lcd /mnt/ssd/Sync/Programming/bash-scripts
+tabedit /mnt/ssd/Sync/Programming/bash-scripts/debug
 set splitbelow splitright
 set nosplitbelow
 set nosplitright
 wincmd t
 set winheight=1 winwidth=1
 argglobal
-3argu
+11argu
 setlocal fdm=indent
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -93,13 +98,14 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 1 - ((0 * winheight(0) + 33) / 66)
+let s:l = 2 - ((1 * winheight(0) + 33) / 66)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-1
-normal! 0
-tabedit funkce
+2
+normal! 075|
+lcd /mnt/ssd/Sync/Programming/bash-scripts
+tabedit /mnt/ssd/Sync/Programming/bash-scripts/funkce
 set splitbelow splitright
 set nosplitbelow
 set nosplitright
@@ -107,7 +113,7 @@ wincmd t
 set winheight=1 winwidth=1
 argglobal
 6argu
-edit funkce
+edit /mnt/ssd/Sync/Programming/bash-scripts/funkce
 setlocal fdm=indent
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -116,12 +122,39 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 1 - ((0 * winheight(0) + 33) / 66)
+let s:l = 10 - ((9 * winheight(0) + 33) / 66)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-1
-normal! 0
+10
+normal! 024|
+lcd /mnt/ssd/Sync/Programming/bash-scripts
+tabedit /mnt/ssd/Sync/Programming/bash-scripts/initialize
+set splitbelow splitright
+set nosplitbelow
+set nosplitright
+wincmd t
+set winheight=1 winwidth=1
+argglobal
+8argu
+setlocal fdm=indent
+setlocal fde=0
+setlocal fmr={{{,}}}
+setlocal fdi=#
+setlocal fdl=99
+setlocal fml=1
+setlocal fdn=20
+setlocal fen
+18
+normal! zo
+48
+normal! zo
+let s:l = 82 - ((51 * winheight(0) + 33) / 66)
+if s:l < 1 | let s:l = 1 | endif
+exe s:l
+normal! zt
+82
+normal! 05|
 lcd /mnt/ssd/Sync/Programming/bash-scripts
 tabedit /mnt/ssd/Sync/Programming/bash-scripts/mysql-backup
 set splitbelow splitright
@@ -139,80 +172,15 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 1 - ((0 * winheight(0) + 33) / 66)
+22
+normal! zo
+82
+normal! zo
+let s:l = 96 - ((65 * winheight(0) + 33) / 66)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-1
-normal! 0
-lcd /mnt/ssd/Sync/Programming/bash-scripts
-tabedit /mnt/ssd/Sync/Programming/bash-scripts/postgresql-backup
-set splitbelow splitright
-set nosplitbelow
-set nosplitright
-wincmd t
-set winheight=1 winwidth=1
-argglobal
-8argu
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-let s:l = 1 - ((0 * winheight(0) + 33) / 66)
-if s:l < 1 | let s:l = 1 | endif
-exe s:l
-normal! zt
-1
-normal! 0
-lcd /mnt/ssd/Sync/Programming/bash-scripts
-tabedit /mnt/ssd/Sync/Programming/bash-scripts/rsync-backup
-set splitbelow splitright
-set nosplitbelow
-set nosplitright
-wincmd t
-set winheight=1 winwidth=1
-argglobal
-9argu
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-let s:l = 1 - ((0 * winheight(0) + 33) / 66)
-if s:l < 1 | let s:l = 1 | endif
-exe s:l
-normal! zt
-1
-normal! 0
-lcd /mnt/ssd/Sync/Programming/bash-scripts
-tabedit /mnt/ssd/Sync/Programming/bash-scripts/server-backup
-set splitbelow splitright
-set nosplitbelow
-set nosplitright
-wincmd t
-set winheight=1 winwidth=1
-argglobal
-10argu
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-let s:l = 1 - ((0 * winheight(0) + 33) / 66)
-if s:l < 1 | let s:l = 1 | endif
-exe s:l
-normal! zt
-1
+96
 normal! 0
 lcd /mnt/ssd/Sync/Programming/bash-scripts
 tabedit /mnt/ssd/Sync/Programming/bash-scripts/server-rsync-backup
@@ -222,7 +190,7 @@ set nosplitright
 wincmd t
 set winheight=1 winwidth=1
 argglobal
-11argu
+3argu
 setlocal fdm=indent
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -231,13 +199,14 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 1 - ((0 * winheight(0) + 33) / 66)
+21
+normal! zo
+let s:l = 75 - ((20 * winheight(0) + 33) / 66)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-1
-normal! 0
-lcd /mnt/ssd/Sync/Programming/bash-scripts
+75
+normal! 09|
 tabedit /mnt/ssd/Sync/Programming/bash-scripts/zabbix-backup
 set splitbelow splitright
 set nosplitbelow
@@ -245,7 +214,7 @@ set nosplitright
 wincmd t
 set winheight=1 winwidth=1
 argglobal
-12argu
+2argu
 setlocal fdm=indent
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -254,14 +223,15 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 1 - ((0 * winheight(0) + 33) / 66)
+21
+normal! zo
+let s:l = 76 - ((20 * winheight(0) + 33) / 66)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-1
+76
 normal! 0
-lcd /mnt/ssd/Sync/Programming/bash-scripts
-tabnext 1
+tabnext 2
 set stal=1
 if exists('s:wipebuf')
   silent exe 'bwipe ' . s:wipebuf

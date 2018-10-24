@@ -22,12 +22,12 @@ then
 	then
 
 		#cesta ke scriptu
-		scriptDir="/usr/local/scripty"
+		scriptDir="/usr/local/bash-scripts"
 		verbose=0
 	else
 
 		#cesta ke scriptu
-		scriptDir="/usr/local/scripty/pracovni"
+		scriptDir="/usr/local/bash-scripts/pracovni"
 		verbose=1
 		deBug=1
 	fi

@@ -1,10 +1,11 @@
 #!/bin/bash
 #inicializacni script pro nahrani a nastaveni rsync stahovani na server
-homeDir="/usr/local/scripty/home"
-binDir="/usr/local/bin"
+sbinDir="/usr/local/sbin"
 btsyncDir="/var/btsync"
 bashFile="$HOME/.bashrc"
-defaultList="server-backup zabbix-backup mysql-backup samba-backup rsync-backup postgresql-backup check-server"
+# omezeni seznamu scriptu
+#defaultList="server-backup zabbix-backup mysql-backup samba-backup rsync-backup postgresql-backup check-server"
+defaultList="server-backup mysql-backup postgresql-backup check-server"
 
 
 #_PROMENNE
@@ -14,11 +15,11 @@ scriptName="initialize"
 #v pripade, ze je script spousten ze slozky pracovni, nastavi se mu jine cesty, nez pri spusteni pres cron
 if [ "$(echo $PWD | grep -c pracovni)" -eq 0 ] && [ "$(echo $0 | grep -c pracovni)" -eq 0 ]	
 then
-	scriptDir="/usr/local/scripty" #cesta ke scriptu
+	scriptDir="/usr/local/bash-scripts" #cesta ke scriptu
         verbose=0
 	deBug=0
 else
-	scriptDir="/usr/local/scripty/pracovni" #cesta ke scriptu
+	scriptDir="/usr/local/bash-scripts/pracovni" #cesta ke scriptu
 	verbose=1
 	deBug=1
 fi
@@ -27,7 +28,7 @@ fi
 if [ "$UID" -eq 0 ]
 then
 	#stazeni obsahu ze serveru
-	rsync -av --delete monitoring.comarr.cz::scripty /usr/local/scripty
+	git clone git@git.tlapnet.cz:vaclavz/bash-scripts.git /usr/local/
 	echo "Provedeno stazeni souboru ze serveru Monitoring"
 else
 	echo "Pozor - prvotni spusteni je nutne spustit jako root"
@@ -52,11 +53,11 @@ then
 	CheckDir "$pipeDir"
 	CheckDir "$scriptDir"
 	CheckDir "$scripty"
-	Log "nalinkovani scriptu do /usr/local/bin"
-    #nalinkuje vsechny scripty ve slozce $scriptDir do slozky $binDir
+	Log "nalinkovani scriptu do $sbinDir"
+    #nalinkuje vsechny scripty ve slozce $scriptDir do slozky $sbinDir
 	for script in $(find "$scriptDir" -maxdepth 1 -mindepth 1 -type f )
 	do
-		ln -sf "$script" "$binDir"
+		ln -sf "$script" "$sbinDir"
 		RvLog "vytvoren symlink ($script)"
 
 		#if [ -f "$btsyncDir/scripty/${script##*/}/.config" ]
@@ -70,25 +71,13 @@ then
 
 	Log "konfigurace cronu a logrotate"
 	[ -h "/etc/logrotate.d/scripty" -a -e "/etc/logrotate.d/scripty" ] ||\
-        ln -sf /usr/local/scripty/etc/logrotate.d/scripty /etc/logrotate.d/scripty	
-	RvLog "ln -sf /usr/local/scripty/etc/logrotate.d/scripty /etc/logrotate.d/scripty"
+        ln -sf /usr/local/bash-scripts/etc/logrotate.d/scripty /etc/logrotate.d/scripty	
+	RvLog "ln -sf /usr/local/bash-scripts/etc/logrotate.d/scripty /etc/logrotate.d/scripty"
 
 
 	#vytvoreni pole ze seznamu scriptu
 	scriptsARRAY=($(echo "$defaultList"))
 	Log "nacteno pole scriptsARRAY ($scriptsARRAY)"
-
-	#prechod na /usr/local/scripty
-	ln -sf /usr/local/scripty/script-downloader /etc/cron.hourly/
-	RvLog "ln -sf /usr/local/scripty/script-downloader /etc/cron.daily/"
-
-	#nalinkuje scripty do /etc/cron.daily
-	for script in ${scriptsARRAY[@]}
-	do
-		ln -sf /usr/local/scripty/"$script" /etc/cron.daily/
-		RvLog "ln -sf /usr/local/scripty/cronrun /etc/cron.daily/"
-	done
-	Log "kontroly dokonceny"
 
 	#doplneni aliasu scr
 	if [ -e "$bashFile" ] && [ "$(grep -c 'alias scr' $bashFile)" -eq 0 ]
@@ -99,15 +88,6 @@ then
 		Log "soubor ($bashFile) je aktualni"
 	fi
 fi
-
-
-#nalinkuje vsechny soubory v $homeDir do domovske slozky konkretniho uzivatele
-for file in $(ls -a "$homeDir" | grep -v "\." | grep -v "ssh")	
-do
-	ln -sf "$homeDir/$file" ~/.$file
-	RvLog "vytvoren symlink ($homeDir/$file)"
-done
-
 
 MailSend
 exit "$rv"

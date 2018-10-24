@@ -22,12 +22,12 @@ then
 	then
 
 		#cesta ke scriptu
-		scriptDir="/usr/local/scripty"
+		scriptDir="/usr/local/bash-scripts"
 		verbose=0
 	else
 
 		#cesta ke scriptu
-		scriptDir="/usr/local/scripty/pracovni"
+		scriptDir="/usr/local/bash-scripts/pracovni"
 		verbose=1
 		deBug=1
 	fi
@@ -92,9 +92,6 @@ write(){
 	echo "#disabled=1 - script se nepousti
 #disabled=0 - script se pousti
 disabled=1
-
-#zapsat email pro posilani erroru, pokud je prazdne, logy stejne chodi na vaclavz@comarr.cz
-recipient=\"\"
 
 #pokud je vyplneno uzivatelske jmeno, provadi se autentifikace pri rsyncu
 #heslo je nutno nastavit do souboru /usr/local/etc/server-rsync-backup.secret

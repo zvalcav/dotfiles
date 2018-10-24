@@ -6,7 +6,8 @@
 #_TestDir #_RemoveDir #_RecreateDir
 
 
-scripty="/usr/local/scripty"
+scripty="/usr/local/bash-scripts"
+sbinDir="/usr/local/sbin"
 
 #nastaveni verbose vystupu, pokud jeste nebyl nastaven 
 if [ -z "$verbose" ]
@@ -23,14 +24,14 @@ configDir="/usr/local/etc"
 #konfiguracni soubor pro konkretni script
 configFile="$configDir/${scriptName}.conf"
 
-#slozka, kde jsou .err soubory a soubor messages pro scripty
-logDir="/var/log"
+#slozka, kde jsou .err soubory a logy z jednotlivych scriptu
+logDir="/var/log/scripty"
 
 #souboru, kam se loguje vse
-logFile="$logDir/scripty.log"
+logFile="$logDir/${scriptName}.log"
 
 #souboru, kam se loguji vystupy programu ve scriptu vse
-outputFile="$logDir/scripty-output.log"
+outputFile="$logDir/${scriptName}-output.log"
 
 #slozka, kde jsou .pid soubory pro jednotlive bezici procesy + .start .stop soubory
 #ktere slouzi pro detekci spusteni a dokonceni scriptu
@@ -94,15 +95,9 @@ LogError(){
 	#provede ERROR zapis predaneho parametru do logu s nazvnem scriptu v (/var/log/scripty)
 	if [ "$verbose" -eq 1 ]
 	then
-#		logger -s -p local1.err -t "$scriptName - ERROR"  "$1"
-#		logger -p local0.err -t "$scriptName - ERROR"  "$1"
-#		echo "$(date '+%b %d %T') $HOSTNAME $scriptName: ERROR - $1" >> "$logDir/${scriptName}.err"
 		echo "$(date '+%b %d %T') $HOSTNAME $scriptName: ERROR - $1" | tee -a "$logFile"
 		touch "$errorFile"
 	else
-#		logger -p local1.err -t "$scriptName - ERROR"  "$1"
-#		logger -p local0.err -t "$scriptName - ERROR"  "$1"
-#		echo "$(date '+%b %d %T') $HOSTNAME $scriptName: ERROR - $1" >> "$logDir/${scriptName}.err"
 		echo "$(date '+%b %d %T') $HOSTNAME $scriptName: ERROR - $1" >> "$logFile"
 		touch "$errorFile"
 	fi
@@ -125,7 +120,8 @@ RvLog(){
 
 #_MailSend
 MailSend(){
-	#posle errory z prubehu, pokud se nejake zapsaly do $errorFile
+	#posle errory z prubehu, pokud se nejake zapsaly do $errorFile - pouze z duvodu kompatibility a 
+	# pouziti ve vsech scriptech - maily neposila - jen loguje
 	
 	#odstranuje vzdy, krome pripadu,  kdy je predan parametr keep
 	#ten se predava pouze pri kontrole pomoci funkce TestRunFile()
@@ -141,10 +137,7 @@ MailSend(){
 
 	if [ -e "$errorFile" ]
 	then
-		defaultRecipient="poruchy@comarr.eu vaclavz@comarr.cz"
-		LogError "MailSend - script ($scriptName) - nastaly problemy, posilam mailem vystup"
-		cat "$logFile" | grep "$scriptName" | mail -s "SCRIPT ERROR - ($scriptName) - ($HOSTNAME)"\
-			"$defaultRecipient" "$recipient"
+		LogError "MailSend - script ($scriptName) - nastaly problemy"
 		return 11
 	else
 		touch "$stopFile"
