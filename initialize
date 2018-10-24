@@ -33,7 +33,7 @@ then
 	else
 		cd "$scriptDir"
 		git pull
-		echo "Provedeno oklonovani git repozitare"
+		echo "Provedena aktualizace git repozitare"
 		cd -
 	fi
 else
