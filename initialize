@@ -23,6 +23,8 @@ fi
 #spousti se pouze pod rootem
 if [ "$UID" -eq 0 ]
 then
+	CheckDir "$logDir"
+
 	# pokud jeste neexistuje slozka se scripty, provede klonovani repozitare
 	if [ ! -d "$scriptDir" ]
 	then
@@ -60,7 +62,6 @@ then
 	CheckDir "$pipeDir"
 	CheckDir "$scriptDir"
 	CheckDir "$scripty"
-	CheckDir "$logDir"
 
 	Log "nalinkovani scriptu do $sbinDir"
 
