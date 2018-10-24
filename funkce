@@ -72,10 +72,6 @@ then
 fi
 
 
-#prida datum na konec outputFile
-echo -e "\n\nstart time: $(date +%F_%H-%M)" >> "$outputFile"
-
-
 #_Log
 Log(){
 	#provede zapis predaneho parametru do logu (/var/log/scripty), pri verbose to hrne i na screen
@@ -221,5 +217,11 @@ TestRunFile()
 		Log "START - OK - zaznamenan zacatek scriptu ($scriptName) - ($runFile)"
 	fi
 }
+
+# kontrola existence slozky pro logovani
+CheckDir "$logDir"
+
+#prida datum na konec outputFile
+echo -e "\n\nstart time: $(date +%F_%H-%M)" >> "$outputFile"
 
 TestRunFile
