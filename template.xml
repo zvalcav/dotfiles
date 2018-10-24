@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>3.0</version>
-    <date>2017-09-11T06:09:41Z</date>
+    <date>2018-10-24T09:07:43Z</date>
     <groups>
         <group>
-            <name>Tlapnet Templates</name>
+            <name>Shapery - Tlapnet</name>
         </group>
     </groups>
     <templates>
@@ -14,7 +14,7 @@
             <description/>
             <groups>
                 <group>
-                    <name>Tlapnet Templates</name>
+                    <name>Shapery - Tlapnet</name>
                 </group>
             </groups>
             <applications>
@@ -110,12 +110,12 @@
                     <logtimefmt/>
                 </item>
                 <item>
-                    <name>scripts-renew</name>
+                    <name>postgresql-backup error</name>
                     <type>7</type>
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>vfs.file.exists[/var/spool/scripty/renew]</key>
+                    <key>vfs.file.exists[/var/spool/scripty/postgresql-backup.err]</key>
                     <delay>600</delay>
                     <history>7</history>
                     <trends>30</trends>
@@ -142,7 +142,7 @@
                     <publickey/>
                     <privatekey/>
                     <port/>
-                    <description>kontroluje zda existuje renew</description>
+                    <description>kontroluje zda existuje $errorFile</description>
                     <inventory_link>0</inventory_link>
                     <applications>
                         <application>
@@ -196,12 +196,12 @@
                     <logtimefmt/>
                 </item>
                 <item>
-                    <name>script-downloader error</name>
+                    <name>server-backup error</name>
                     <type>7</type>
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>vfs.file.exists[/var/spool/scripty/script-downloader.err]</key>
+                    <key>vfs.file.exists[/var/spool/scripty/server-backup.err]</key>
                     <delay>600</delay>
                     <history>7</history>
                     <trends>30</trends>
@@ -239,12 +239,12 @@
                     <logtimefmt/>
                 </item>
                 <item>
-                    <name>server-backup error</name>
+                    <name>zabbix-backup error</name>
                     <type>7</type>
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>vfs.file.exists[/var/spool/scripty/server-backup.err]</key>
+                    <key>vfs.file.exists[/var/spool/scripty/zabbix-backup.err]</key>
                     <delay>600</delay>
                     <history>7</history>
                     <trends>30</trends>
@@ -454,6 +454,92 @@
                     <logtimefmt/>
                 </item>
                 <item>
+                    <name>postgresql-backup start</name>
+                    <type>7</type>
+                    <snmp_community/>
+                    <multiplier>0</multiplier>
+                    <snmp_oid/>
+                    <key>vfs.file.time[/var/spool/scripty/postgresql-backup.start]</key>
+                    <delay>600</delay>
+                    <history>7</history>
+                    <trends>30</trends>
+                    <status>0</status>
+                    <value_type>3</value_type>
+                    <allowed_hosts/>
+                    <units>s</units>
+                    <delta>0</delta>
+                    <snmpv3_contextname/>
+                    <snmpv3_securityname/>
+                    <snmpv3_securitylevel>0</snmpv3_securitylevel>
+                    <snmpv3_authprotocol>0</snmpv3_authprotocol>
+                    <snmpv3_authpassphrase/>
+                    <snmpv3_privprotocol>0</snmpv3_privprotocol>
+                    <snmpv3_privpassphrase/>
+                    <formula>1</formula>
+                    <delay_flex/>
+                    <params/>
+                    <ipmi_sensor/>
+                    <data_type>0</data_type>
+                    <authtype>0</authtype>
+                    <username/>
+                    <password/>
+                    <publickey/>
+                    <privatekey/>
+                    <port/>
+                    <description>kontroluje cas posledniho spusteni scriptu</description>
+                    <inventory_link>0</inventory_link>
+                    <applications>
+                        <application>
+                            <name>Scripty</name>
+                        </application>
+                    </applications>
+                    <valuemap/>
+                    <logtimefmt/>
+                </item>
+                <item>
+                    <name>postgresql-backup stop</name>
+                    <type>7</type>
+                    <snmp_community/>
+                    <multiplier>0</multiplier>
+                    <snmp_oid/>
+                    <key>vfs.file.time[/var/spool/scripty/postgresql-backup.stop]</key>
+                    <delay>600</delay>
+                    <history>7</history>
+                    <trends>30</trends>
+                    <status>0</status>
+                    <value_type>3</value_type>
+                    <allowed_hosts/>
+                    <units>s</units>
+                    <delta>0</delta>
+                    <snmpv3_contextname/>
+                    <snmpv3_securityname/>
+                    <snmpv3_securitylevel>0</snmpv3_securitylevel>
+                    <snmpv3_authprotocol>0</snmpv3_authprotocol>
+                    <snmpv3_authpassphrase/>
+                    <snmpv3_privprotocol>0</snmpv3_privprotocol>
+                    <snmpv3_privpassphrase/>
+                    <formula>1</formula>
+                    <delay_flex/>
+                    <params/>
+                    <ipmi_sensor/>
+                    <data_type>0</data_type>
+                    <authtype>0</authtype>
+                    <username/>
+                    <password/>
+                    <publickey/>
+                    <privatekey/>
+                    <port/>
+                    <description>kontroluje cas posledniho dokonceni scriptu</description>
+                    <inventory_link>0</inventory_link>
+                    <applications>
+                        <application>
+                            <name>Scripty</name>
+                        </application>
+                    </applications>
+                    <valuemap/>
+                    <logtimefmt/>
+                </item>
+                <item>
                     <name>rsync-backup start</name>
                     <type>7</type>
                     <snmp_community/>
@@ -530,49 +616,6 @@
                     <privatekey/>
                     <port/>
                     <description>kontroluje cas posledniho dokonceni scriptu</description>
-                    <inventory_link>0</inventory_link>
-                    <applications>
-                        <application>
-                            <name>Scripty</name>
-                        </application>
-                    </applications>
-                    <valuemap/>
-                    <logtimefmt/>
-                </item>
-                <item>
-                    <name>script-downloader time</name>
-                    <type>7</type>
-                    <snmp_community/>
-                    <multiplier>0</multiplier>
-                    <snmp_oid/>
-                    <key>vfs.file.time[/var/spool/scripty/script-downloader.stop]</key>
-                    <delay>600</delay>
-                    <history>7</history>
-                    <trends>30</trends>
-                    <status>0</status>
-                    <value_type>3</value_type>
-                    <allowed_hosts/>
-                    <units>s</units>
-                    <delta>0</delta>
-                    <snmpv3_contextname/>
-                    <snmpv3_securityname/>
-                    <snmpv3_securitylevel>0</snmpv3_securitylevel>
-                    <snmpv3_authprotocol>0</snmpv3_authprotocol>
-                    <snmpv3_authpassphrase/>
-                    <snmpv3_privprotocol>0</snmpv3_privprotocol>
-                    <snmpv3_privpassphrase/>
-                    <formula>1</formula>
-                    <delay_flex/>
-                    <params/>
-                    <ipmi_sensor/>
-                    <data_type>0</data_type>
-                    <authtype>0</authtype>
-                    <username/>
-                    <password/>
-                    <publickey/>
-                    <privatekey/>
-                    <port/>
-                    <description>kontroluje cas posledniho dokonceni scripru</description>
                     <inventory_link>0</inventory_link>
                     <applications>
                         <application>
@@ -668,6 +711,92 @@
                     <valuemap/>
                     <logtimefmt/>
                 </item>
+                <item>
+                    <name>zabbix-backup start</name>
+                    <type>7</type>
+                    <snmp_community/>
+                    <multiplier>0</multiplier>
+                    <snmp_oid/>
+                    <key>vfs.file.time[/var/spool/scripty/zabbix-backup.start]</key>
+                    <delay>600</delay>
+                    <history>7</history>
+                    <trends>30</trends>
+                    <status>0</status>
+                    <value_type>3</value_type>
+                    <allowed_hosts/>
+                    <units>s</units>
+                    <delta>0</delta>
+                    <snmpv3_contextname/>
+                    <snmpv3_securityname/>
+                    <snmpv3_securitylevel>0</snmpv3_securitylevel>
+                    <snmpv3_authprotocol>0</snmpv3_authprotocol>
+                    <snmpv3_authpassphrase/>
+                    <snmpv3_privprotocol>0</snmpv3_privprotocol>
+                    <snmpv3_privpassphrase/>
+                    <formula>1</formula>
+                    <delay_flex/>
+                    <params/>
+                    <ipmi_sensor/>
+                    <data_type>0</data_type>
+                    <authtype>0</authtype>
+                    <username/>
+                    <password/>
+                    <publickey/>
+                    <privatekey/>
+                    <port/>
+                    <description>kontroluje cas posledniho spusteni scriptu</description>
+                    <inventory_link>0</inventory_link>
+                    <applications>
+                        <application>
+                            <name>Scripty</name>
+                        </application>
+                    </applications>
+                    <valuemap/>
+                    <logtimefmt/>
+                </item>
+                <item>
+                    <name>zabbix-backup stop</name>
+                    <type>7</type>
+                    <snmp_community/>
+                    <multiplier>0</multiplier>
+                    <snmp_oid/>
+                    <key>vfs.file.time[/var/spool/scripty/zabbix-backup.stop]</key>
+                    <delay>600</delay>
+                    <history>7</history>
+                    <trends>30</trends>
+                    <status>0</status>
+                    <value_type>3</value_type>
+                    <allowed_hosts/>
+                    <units>s</units>
+                    <delta>0</delta>
+                    <snmpv3_contextname/>
+                    <snmpv3_securityname/>
+                    <snmpv3_securitylevel>0</snmpv3_securitylevel>
+                    <snmpv3_authprotocol>0</snmpv3_authprotocol>
+                    <snmpv3_authpassphrase/>
+                    <snmpv3_privprotocol>0</snmpv3_privprotocol>
+                    <snmpv3_privpassphrase/>
+                    <formula>1</formula>
+                    <delay_flex/>
+                    <params/>
+                    <ipmi_sensor/>
+                    <data_type>0</data_type>
+                    <authtype>0</authtype>
+                    <username/>
+                    <password/>
+                    <publickey/>
+                    <privatekey/>
+                    <port/>
+                    <description>kontroluje cas posledniho dokonceni scriptu</description>
+                    <inventory_link>0</inventory_link>
+                    <applications>
+                        <application>
+                            <name>Scripty</name>
+                        </application>
+                    </applications>
+                    <valuemap/>
+                    <logtimefmt/>
+                </item>
             </items>
             <discovery_rules/>
             <macros/>
@@ -681,7 +810,7 @@
             <name>Scripty - check-server error @ {HOST.NAME}</name>
             <url/>
             <status>1</status>
-            <priority>2</priority>
+            <priority>3</priority>
             <description>Na serveru {HOST.NAME} je po skonceni scriptu soubor .error, nutna kontrola</description>
             <type>0</type>
             <dependencies/>
@@ -691,7 +820,7 @@
             <name>Scripty - check-server start &gt; 48h @ {HOST.NAME}</name>
             <url/>
             <status>0</status>
-            <priority>2</priority>
+            <priority>3</priority>
             <description>Na serveru {HOST.NAME} byl spusten script naposledy pred vice nez 48h.</description>
             <type>0</type>
             <dependencies/>
@@ -701,7 +830,7 @@
             <name>Scripty - mysql-backup error @ {HOST.NAME}</name>
             <url/>
             <status>0</status>
-            <priority>2</priority>
+            <priority>3</priority>
             <description>Na serveru {HOST.NAME} je po skonceni scriptu soubor .error, nutna kontrola</description>
             <type>0</type>
             <dependencies/>
@@ -711,7 +840,27 @@
             <name>Scripty - mysql-backup stop &gt; 48h @ {HOST.NAME}</name>
             <url/>
             <status>0</status>
-            <priority>2</priority>
+            <priority>3</priority>
+            <description>Na serveru {HOST.NAME} dobehl script naposledy pred vice nez 48h.</description>
+            <type>0</type>
+            <dependencies/>
+        </trigger>
+        <trigger>
+            <expression>{Tlapnet Active Scripty:vfs.file.exists[/var/spool/scripty/postgresql-backup.err].last()}=1</expression>
+            <name>Scripty - postgresql-backup error @ {HOST.NAME}</name>
+            <url/>
+            <status>0</status>
+            <priority>3</priority>
+            <description>Na serveru {HOST.NAME} je po skonceni scriptu soubor .error, nutna kontrola</description>
+            <type>0</type>
+            <dependencies/>
+        </trigger>
+        <trigger>
+            <expression>({Tlapnet Active Scripty:vfs.file.time[/var/spool/scripty/postgresql-backup.start].now()} - {Tlapnet Active Scripty:vfs.file.time[/var/spool/scripty/postgresql-backup.start].last()})&gt;172800</expression>
+            <name>Scripty - postgresql-backup stop &gt; 48h @ {HOST.NAME}</name>
+            <url/>
+            <status>0</status>
+            <priority>3</priority>
             <description>Na serveru {HOST.NAME} dobehl script naposledy pred vice nez 48h.</description>
             <type>0</type>
             <dependencies/>
@@ -721,7 +870,7 @@
             <name>Scripty - rsync-backup stop &gt; 48h @ {HOST.NAME}</name>
             <url/>
             <status>0</status>
-            <priority>2</priority>
+            <priority>3</priority>
             <description>Na serveru {HOST.NAME} dobehl script naposledy pred vice nez 48h.</description>
             <type>0</type>
             <dependencies/>
@@ -731,7 +880,7 @@
             <name>Scripty - rsync-backup zavazny @ {HOST.NAME}</name>
             <url/>
             <status>0</status>
-            <priority>2</priority>
+            <priority>3</priority>
             <description>Na serveru {HOST.NAME} je po skonceni scriptu soubor .error, nutna kontrola</description>
             <type>0</type>
             <dependencies/>
@@ -741,7 +890,7 @@
             <name>Scripty - server-backup error @ {HOST.NAME}</name>
             <url/>
             <status>0</status>
-            <priority>2</priority>
+            <priority>3</priority>
             <description>Na serveru {HOST.NAME} je po skonceni scriptu soubor .error, nutna kontrola</description>
             <type>0</type>
             <dependencies/>
@@ -751,7 +900,27 @@
             <name>Scripty - server-backup stop &gt; 48h {HOST.NAME}</name>
             <url/>
             <status>0</status>
-            <priority>2</priority>
+            <priority>3</priority>
+            <description>Na serveru {HOST.NAME} dobehl script naposledy pred vice nez 48h.</description>
+            <type>0</type>
+            <dependencies/>
+        </trigger>
+        <trigger>
+            <expression>{Tlapnet Active Scripty:vfs.file.exists[/var/spool/scripty/zabbix-backup.err].last()}=1</expression>
+            <name>Scripty - zabbix-backup error @ {HOST.NAME}</name>
+            <url/>
+            <status>0</status>
+            <priority>3</priority>
+            <description>Na serveru {HOST.NAME} je po skonceni scriptu soubor .error, nutna kontrola</description>
+            <type>0</type>
+            <dependencies/>
+        </trigger>
+        <trigger>
+            <expression>({Tlapnet Active Scripty:vfs.file.time[/var/spool/scripty/zabbix-backup.start].now()} - {Tlapnet Active Scripty:vfs.file.time[/var/spool/scripty/zabbix-backup.start].last()})&gt;172800</expression>
+            <name>Scripty - zabbix-backup stop &gt; 48h @ {HOST.NAME}</name>
+            <url/>
+            <status>0</status>
+            <priority>3</priority>
             <description>Na serveru {HOST.NAME} dobehl script naposledy pred vice nez 48h.</description>
             <type>0</type>
             <dependencies/>
