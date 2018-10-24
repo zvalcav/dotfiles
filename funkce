@@ -137,7 +137,7 @@ MailSend(){
 		return 11
 	else
 		touch "$stopFile"
-		RvLog "STOP - OK - script ($scriptName) dokoncen bez erroru"
+		RvLog "STOP - OK - script ($scriptName) dokoncen bez problemu"
 		return 0
 	fi
 }
