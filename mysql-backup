@@ -106,7 +106,7 @@ then
 	#vytvori radek, ktery spousti dany script ve 20:00 a kompletni debug vystup se uklada do souboru ve /var/log
 	{ 
 		echo "#denni spousteni mysql-backup"
-		echo "0 20 * * * root $sbinDir/mysql-backup &>$logDir/$outputFile"
+		echo "0 20 * * * root $sbinDir/mysql-backup &>$outputFile"
 	} > /etc/cron.d/mysql-backup
 	RvLog "zapsano spousteni mysql-backup scriptu do cronu roota"
 fi

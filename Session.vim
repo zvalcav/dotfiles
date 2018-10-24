@@ -13,12 +13,12 @@ badd +77 check-server
 badd +2 debug
 badd +10 funkce
 badd +36 initialize
-badd +1 mysql-backup
+badd +169 mysql-backup
 badd +83 postgresql-backup
 badd +1 rsync-backup
 badd +1 server-backup
 badd +2 server-rsync-backup
-badd +92 zabbix-backup
+badd +77 zabbix-backup
 badd +1 etc
 argglobal
 silent! argdel *
@@ -180,7 +180,7 @@ set nosplitright
 wincmd t
 set winheight=1 winwidth=1
 argglobal
-7argu
+edit /mnt/ssd/Sync/Programming/bash-scripts/mysql-backup
 setlocal fdm=indent
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -195,12 +195,12 @@ normal! zo
 normal! zo
 107
 normal! zo
-let s:l = 169 - ((62 * winheight(0) + 32) / 65)
+let s:l = 109 - ((35 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-169
-normal! 0
+109
+normal! 055|
 lcd /mnt/ssd/Sync/Programming/bash-scripts
 tabedit /mnt/ssd/Sync/Programming/bash-scripts/debug
 set splitbelow splitright
