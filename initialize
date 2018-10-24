@@ -7,18 +7,10 @@ defaultList="server-backup mysql-backup postgresql-backup check-server"
 #_PROMENNE
 scriptName="initialize"
 
-
-#v pripade, ze je script spousten ze slozky pracovni, nastavi se mu jine cesty, nez pri spusteni pres cron
-if [ "$(echo $PWD | grep -c pracovni)" -eq 0 ] && [ "$(echo $0 | grep -c pracovni)" -eq 0 ]	
-then
-	scriptDir="/usr/local/bash-scripts" #cesta ke scriptu
-	verbose=0
-	deBug=0
-else
-	scriptDir="/usr/local/bash-scripts/pracovni" #cesta ke scriptu
-	verbose=1
-	deBug=1
-fi
+#cesta ke scriptu
+scriptDir="/usr/local/bash-scripts"
+verbose=0
+deBug=0
 
 #spousti se pouze pod rootem
 if [ "$UID" -eq 0 ]

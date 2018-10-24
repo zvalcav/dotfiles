@@ -22,24 +22,11 @@
 scriptName="server-backup"
 backupDir="/var/backup"
 defaultList="/root/.ssh /root/.bash_history /root/.histfile_zsh /etc /var/spool/cron /usr/local/etc"
-if [ -z "$scriptDir" ] 
-then
 
-	#v pripade, ze je script spousten ze slozky pracovni, nastavi se mu jine cesty, nez pri spusteni pres cron
-	if [ "$(echo $PWD | grep -c pracovni)" -eq 0 ] && [ "$(echo $0 | grep -c pracovni)" -eq 0 ]
-	then
-
-		#cesta ke scriptu
-		scriptDir="/usr/local/scripty"
-		verbose=0
-	else
-
-		#cesta ke scriptu
-		scriptDir="/usr/local/scripty/pracovni"
-		verbose=1
-		deBug=1
-	fi
-fi
+#cesta ke scriptu
+scriptDir="/usr/local/bash-scripts"
+verbose=0
+deBug=0
 
 
 #_LOGOVANI

@@ -17,20 +17,10 @@ scriptName="check-server"
 #seznam scriptu, ktere se budou spoustet z cron.daily, mysql-backup se bude spousten crontabem
 defaultList="check-server server-backup rsync-backup postgresql-backup"
 
-
-#v pripade, ze je script spousten ze slozky pracovni, nastavi se mu jine cesty, nez pri spusteni pres cron
-if [ "$(echo $PWD | grep -c pracovni)" -eq 0 ] && [ "$(echo $0 | grep -c pracovni)" -eq 0 ]
-then
-
-	#cesta ke scriptu
-	scriptDir="/usr/local/bash-scripts"
-	verbose=0
-else
-
-	#cesta ke scriptu
-	scriptDir="/usr/local/bash-scripts/pracovni"
-	verbose=1
-fi
+#cesta ke scriptu
+scriptDir="/usr/local/bash-scripts"
+verbose=0
+deBug=0
 
 
 #_LOGOVANI
