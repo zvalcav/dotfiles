@@ -4,7 +4,14 @@
 #version 1.1
 
 
-#LIST _PROMENNE _EXITY _LOGOVANI _PODMINKY _KONFIGURACE _ZALOHA
+#LIST
+#_PROMENNE
+#_EXITY
+#_LOGOVANI
+#_PODMINKY
+#_KONFIGURACE
+#_MYSQL_BACKUP_CRON
+#_ZALOHA
 
 
 #_PROMENNE
@@ -91,6 +98,27 @@ write(){
 	LogError "zapsan konfiguracni soubor pro server ($HOSTNAME)"
 	write_mysqlDefaultsFile
 }
+
+#_MYSQL_BACKUP_CRON
+#pokud neni zaznam pro mysql-backup
+if [ ! -e /etc/cron.d/mysql-backup ]
+then
+	#vytvori radek, ktery spousti dany script ve 20:00 a kompletni debug vystup se uklada do souboru ve /var/log
+	{ 
+		echo "#denni spousteni mysql-backup"
+		echo "0 20 * * * root /bin/bash -x $scriptDir/mysql-backup &>$logDir/mysql-backup.log"
+	} > /etc/cron.d/mysql-backup
+	RvLog "zapsano spousteni mysql-backup scriptu do cronu roota"
+#pokud uz zaznam existuje
+else
+	#a stale existuje link v /etc/cron.daily, tak ho odstrani
+	if [ -e /etc/cron.daily/mysql-backup ]
+	then
+		rm /etc/cron.daily/mysql-backup
+		RvLog "odstranen link z cron.daily pro mysql-backup"
+	fi
+fi
+
 
 
 

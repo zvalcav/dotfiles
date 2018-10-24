@@ -14,7 +14,7 @@ badd +2 debug
 badd +10 funkce
 badd +36 initialize
 badd +1 mysql-backup
-badd +82 postgresql-backup
+badd +83 postgresql-backup
 badd +1 rsync-backup
 badd +1 server-backup
 badd +2 server-rsync-backup
@@ -23,17 +23,17 @@ badd +1 etc
 argglobal
 silent! argdel *
 argadd backup
-argadd check-server
-argadd debug
-argadd etc
-argadd funkce
-argadd initialize
-argadd mysql-backup
-argadd postgresql-backup
-argadd rsync-backup
-argadd server-backup
-argadd server-rsync-backup
 argadd zabbix-backup
+argadd server-rsync-backup
+argadd server-backup
+argadd rsync-backup
+argadd postgresql-backup
+argadd mysql-backup
+argadd initialize
+argadd funkce
+argadd etc
+argadd debug
+argadd check-server
 set stal=2
 edit backup
 set splitbelow splitright
@@ -80,7 +80,7 @@ exe s:l
 normal! zt
 36
 normal! 09|
-tabedit zabbix-backup
+tabedit check-server
 set splitbelow splitright
 set nosplitbelow
 set nosplitright
@@ -96,14 +96,14 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 92 - ((51 * winheight(0) + 32) / 65)
+let s:l = 77 - ((39 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-92
-normal! 027|
+77
+normal! 0
 lcd /mnt/ssd/Sync/Programming/bash-scripts
-tabedit /mnt/ssd/Sync/Programming/bash-scripts/server-rsync-backup
+tabedit /mnt/ssd/Sync/Programming/bash-scripts/debug
 set splitbelow splitright
 set nosplitbelow
 set nosplitright
@@ -150,7 +150,7 @@ normal! zt
 10
 normal! 024|
 lcd /mnt/ssd/Sync/Programming/bash-scripts
-tabedit /mnt/ssd/Sync/Programming/bash-scripts/postgresql-backup
+tabedit /mnt/ssd/Sync/Programming/bash-scripts/initialize
 set splitbelow splitright
 set nosplitbelow
 set nosplitright
@@ -189,18 +189,22 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-22
+29
 normal! zo
-82
+89
 normal! zo
-let s:l = 96 - ((64 * winheight(0) + 32) / 65)
+107
+normal! zo
+115
+normal! zo
+let s:l = 109 - ((39 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-96
+109
 normal! 0
 lcd /mnt/ssd/Sync/Programming/bash-scripts
-tabedit /mnt/ssd/Sync/Programming/bash-scripts/debug
+tabedit /mnt/ssd/Sync/Programming/bash-scripts/server-rsync-backup
 set splitbelow splitright
 set nosplitbelow
 set nosplitright
@@ -223,7 +227,7 @@ normal! zt
 23
 normal! 0
 lcd /mnt/ssd/Sync/Programming/bash-scripts
-tabedit /mnt/ssd/Sync/Programming/bash-scripts/check-server
+tabedit /mnt/ssd/Sync/Programming/bash-scripts/zabbix-backup
 set splitbelow splitright
 set nosplitbelow
 set nosplitright
@@ -246,7 +250,7 @@ normal! zt
 76
 normal! 0
 lcd /mnt/ssd/Sync/Programming/bash-scripts
-tabnext 2
+tabnext 7
 set stal=1
 if exists('s:wipebuf')
   silent exe 'bwipe ' . s:wipebuf
