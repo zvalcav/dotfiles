@@ -1,9 +1,0 @@
-alias ia='sudo apt-get install'
-alias ra='sudo apt-get update'
-alias ua='sudo apt-get upgrade'
-alias pa='sudo apt-get autoremove --purge'
-alias ca='sudo apt-get autoclean'
-alias sa='sudo apt search'
-export WINEPREFIX=$HOME/.wine/
-export WINEARCH=win32
-export PYTHONSTARTUP=~/.pystartup

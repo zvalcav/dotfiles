@@ -1,5 +1,0 @@
-#!/bin/bash
-
-#vyliti uzivatelu z mysql vcetne opravneni
-mysql --defaults-extra-file=/usr/local/etc/.my.cnf -B -N -e "SELECT DISTINCT CONCAT('SHOW GRANTS FOR \'', user, '\'@\'', host, '\';') AS query FROM mysql.user" | \
-  mysql --defaults-extra-file=/usr/local/etc/.my.cnf | sed -e 's/\(GRANT .*\)/\1;/;s/^\(Grants for .*\)/## \1 ##/;/##/{x;p;x;}' -e 's/\\\\/\\/g' | grep -v "root" > /var/backup/mysql-user-export.sql

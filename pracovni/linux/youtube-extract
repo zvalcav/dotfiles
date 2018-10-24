@@ -1,8 +1,0 @@
-#!/bin/bash
-[ ! -d "conver" ] && mkdir convert
-find . -type f -name "*.mp4" > _video.list
-while read line
-do
-	avconv -i "$line" -vn -acodec copy "convert/${line%.*}.aac"
-done < _video.list
-rm _video.list

@@ -1,7 +1,0 @@
-[sernet-samba-4.1]
-name=SerNet Samba 4.1 Packages (centos-6)
-type=rpm-md
-baseurl=https://pzdenek:QWnLE7syKMDXN0kP4VCUCQOicU1JJVUf@download.sernet.de/packages/samba/4.1/centos/6/
-gpgcheck=1
-gpgkey=https://pzdenek:QWnLE7syKMDXN0kP4VCUCQOicU1JJVUf@download.sernet.de/packages/samba/4.1/centos/6/repodata/repomd.xml.key
-enabled=0
