@@ -147,7 +147,8 @@ then
 else
 	if [ -z "$mysqlPassword" ]
 	then
-		LogError "Promenna mysqlPassword je prazdna, je nutne nastavit heslo do mysql databaze v [$mysqlDefaultsFile]"
+		LogError "Promenna mysqlPassword je prazdna, \
+					je nutne nastavit heslo do mysql databaze v [$mysqlDefaultsFile]"
 		write_mysqlDefaultsFile
 		MailSend
 		exit 12
@@ -167,6 +168,9 @@ fi
 #_ZALOHA
 #zkontroluje slozku pro zalohy
 CheckDir "$backupDir"
+# kontrola slozky pro export uzivatelu a opravneni + zaloh databaze jako takove
+CheckDir "$backupDir/mysql"
+
 #vyliti uzivatelu z mysql vcetne opravneni - uklada se do slozky /var/backup/mysql/mysql/user-export-datum-cas.sql
 #naleva se to mysql --defaults-extra-file=/usr/local/etc/.my.cnf -A < user-export-*.sql
 mysql --defaults-extra-file=/usr/local/etc/.my.cnf -B -N -e\
@@ -177,7 +181,8 @@ mysql --defaults-extra-file=/usr/local/etc/.my.cnf -B -N -e\
 RvLog "Zaloha uzivatelu a opravneni z mysql databaze"
 
 #nactou se vsechny databaze, ktere nemaji v nazvu Database nebo _schema
-backupItems=$(mysql --defaults-file="$mysqlDefaultsFile" -s -e "show databases;" | grep -v "Database" | grep -v "_schema" | tr '\n' ' ')
+backupItems=$(mysql --defaults-file="$mysqlDefaultsFile"\
+				-s -e "show databases;" | grep -v "Database" | grep -v "_schema" | tr '\n' ' ')
 RvLog "nacteni databazi pro zalohovani"
 #ze seznamu databazi oddeleneho mezerou se vytvori pole
 backupARRAY=($(echo "$backupItems"))
@@ -200,7 +205,8 @@ do
 	#-e extended-insert - viceradkove inserty = mensi dump a rychlejsi naliti
 	#-F flush-logs
 	#--routines - dumpuje i funkce, rutiny a dalsi chujoviny
-	mysqldump --defaults-extra-file="$mysqlDefaultsFile" "$database" -e -F --routines -r "$backupPath/${backupName}.sql" > /dev/null
+	mysqldump --defaults-extra-file="$mysqlDefaultsFile" "$database"\
+		-e -F --routines -r "$backupPath/${backupName}.sql" > /dev/null
 	RvLog "Vytvoren mysqldump databaze s nazvem ($backupPath/${backupName}.sql)"
 
 	if [ "$?" -eq 0 ] && cd "$backupPath"
