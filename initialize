@@ -77,6 +77,9 @@ then
 	# nalinkovani logrotate pro scripty
 	ln -sf "$scriptDir"/etc/logrotate.d/scripty /etc/logrotate.d/scripty	
 	RvLog "ln -sf $scriptDir/etc/logrotate.d/scripty /etc/logrotate.d/scripty"
+
+	# spusteni scriptu pro zalohovani serveru
+	"$sbinDir/server-backup"
 fi
 
 MailSend

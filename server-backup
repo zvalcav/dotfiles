@@ -1,16 +1,27 @@
 #!/bin/bash
 #server-backup
-#provadi zalohovani serveru
-#version 1.0.1
+#provadi zalohovani serveru - kopiruje nastavene adresare do nastavene slozky pro zalohovani
 
 
-#LIST _PROMENNE _EXITY _LOGOVANI _PODMINKY _KONFIGURACE _FUNKCE _ZALOHA
+#LIST
+#_PROMENNE
+#_EXITY
+#_LOGOVANI
+#_PODMINKY
+#_KONFIGURACE
+#_SERVER_BACKUP_CRON
+#_PROMENNE_PRO_ZALOHOVANI
+#_KONTROLA_SLOZEK_PRO_ZALOHU
+#_DAILY
+#_WEEKLY
+#_MONTHLY
+#_COPY
 
 
 #_PROMENNE
 scriptName="server-backup"
 backupDir="/var/backup"
-defaultList="/root/scripty /root/.ssh /root/.bash_history /root/.histfile_zsh /home/opravneni.acl /etc /var/spool/cron /usr/local/etc /usr/local/scripty /var/log/scripty.log"
+defaultList="/root/.ssh /root/.bash_history /root/.histfile_zsh /etc /var/spool/cron /usr/local/etc"
 if [ -z "$scriptDir" ] 
 then
 
@@ -68,7 +79,20 @@ else
 fi
 
 
+#_SERVER_BACKUP_CRON
+#pokud neni zaznam pro server-backup
+if [ ! -e /etc/cron.d/server-backup ]
+then
+	#vytvori radek, ktery spousti dany script ve 20:00 a kompletni debug vystup se uklada do souboru ve /var/log
+	{ 
+		echo "#denni spousteni server-backup"
+		echo "0 20 * * * root $sbinDir/server-backup &>$outputFile"
+	} > /etc/cron.d/server-backup
+	RvLog "zapsano spousteni server-backup scriptu do cronu roota"
+fi
 
+
+#_PROMENNE_PRO_ZALOHOVANI
 #kontrola nastaveni promenne backupLimit
 if [ -z "$backupLimit" ]
 then
@@ -101,6 +125,7 @@ monthName="$HOSTNAME-${monthNo}.tgz"
 Log "kontrola potrebnych slozek"
 
 
+#_KONTROLA_SLOZEK_PRO_ZALOHU
 #zkontroluje potrebne slozky, pripadne je vytvori
 CheckDir "$backupDir/day"
 CheckDir "$backupDir/week"
@@ -115,16 +140,7 @@ CheckDir "/root/scripty"
 Log "dokoncena kontrola potrebnych slozek"
 
 
-#opravneni
-Log "zapisuji opravneni obsahu slozky /home"
-if cd /home
-then
-	getfacl -R ./* > /home/opravneni.acl 2> /dev/null
-	Log "Dokoncen getfacl home"
-fi
-
-
-#DAILY
+#_DAILY
 Log "denni zaloha"
 
 #zkontroluje, zda uz zaloha existuje
@@ -141,7 +157,7 @@ else
 fi
 
 
-##WEEKLY
+#_WEEKLY
 Log "tydenni zaloha"
 if [ "$(find $backupDir/week -type f -name $weekName | wc -l)" -eq 0 ]
 then
@@ -154,7 +170,7 @@ else
 fi
 
 
-#MONTHLY
+#_MONTHLY
 Log "mesicni zaloha"
 if [ "$(find $backupDir/month -type f -name $monthName | wc -l)" -eq 0 ]
 then
@@ -168,7 +184,7 @@ else
 fi
 
 
-#COPY
+#_COPY
 Log "zacinam kopirovat nekomprimovane soubory"
 for l_cpArray in $(echo "$backupList")
 do
