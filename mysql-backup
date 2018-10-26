@@ -48,13 +48,10 @@ mysqlDefaultsFile="$configDir/.my.cnf"
 write_mysqlDefaultsFile()
 {
 	{
-		echo "[mysql]"
-		echo "user=root"
-		echo "password='$mysqlPassword'"
-		echo ""
 		echo "[mysqldump]"
 		echo "user=root"
 		echo "password='$mysqlPassword'"
+		echo "default-character-set=utf8mb4"
 	} > "$mysqlDefaultsFile"
 	chmod 600 "$mysqlDefaultsFile"
 
@@ -88,10 +85,10 @@ write(){
 #pokud neni zaznam pro mysql-backup
 if [ ! -e /etc/cron.d/mysql-backup ]
 then
-	#vytvori radek, ktery spousti dany script ve 20:00 a kompletni debug vystup se uklada do souboru ve /var/log
+	#vytvori radek, ktery spousti dany script ve 2:00 a kompletni debug vystup se uklada do souboru ve /var/log
 	{ 
 		echo "#denni spousteni mysql-backup"
-		echo "0 20 * * * root $sbinDir/mysql-backup &>$outputFile"
+		echo "0 2 * * * root $sbinDir/mysql-backup &>$outputFile"
 	} > /etc/cron.d/mysql-backup
 	RvLog "zapsano spousteni mysql-backup scriptu do cronu roota"
 fi
@@ -167,7 +164,7 @@ RvLog "Zaloha uzivatelu a opravneni z mysql databaze"
 
 #nactou se vsechny databaze, ktere nemaji v nazvu Database nebo _schema
 backupItems=$(mysql --defaults-file="$mysqlDefaultsFile"\
-				-s -e "show databases;" | grep -v "Database" | grep -v "_schema" | tr '\n' ' ')
+				-s -e "show databases;" | grep -v "Database" | grep -v "_schema\|zabbix" | tr '\n' ' ')
 RvLog "nacteni databazi pro zalohovani"
 #ze seznamu databazi oddeleneho mezerou se vytvori pole
 backupARRAY=($(echo "$backupItems"))
