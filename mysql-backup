@@ -48,6 +48,12 @@ mysqlDefaultsFile="$configDir/.my.cnf"
 write_mysqlDefaultsFile()
 {
 	{
+		# musi tu byt i sekce mysql, protoze se vycitaji databaze
+		echo "[mysql]"
+		echo "user=root"
+		echo "password='$mysqlPassword'"
+		echo "default-character-set=utf8mb4"
+		echo ""
 		echo "[mysqldump]"
 		echo "user=root"
 		echo "password='$mysqlPassword'"
