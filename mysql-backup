@@ -194,7 +194,7 @@ do
 	#-F flush-logs
 	#--routines - dumpuje i funkce, rutiny a dalsi chujoviny
 	mysqldump --defaults-extra-file="$mysqlDefaultsFile" "$database"\
-		-e -F --routines -r "$backupPath/${backupName}.sql" > /dev/null
+			  -e -F --routines --events --add-locks -r "$backupPath/${backupName}.sql" > /dev/null
 	RvLog "Vytvoren mysqldump databaze s nazvem ($backupPath/${backupName}.sql)"
 
 	if [ "$?" -eq 0 ] && cd "$backupPath"
@@ -202,6 +202,20 @@ do
 		#-T otestuje archiv a --move po uspesnem testu soubor smaze
 		zip -T -m "${backupName}.zip" "${backupName}.sql" > /dev/null
 		RvLog "mysqldump uspesne zkomprimovan (${backupName}.zip)"
+	fi
+
+	# udela i slave dump, aby byl pripraveny pro pripad potreby
+	mysqldump --defaults-extra-file="$mysqlDefaultsFile" "$database"\
+			  --master-data=1 --ignore-table=radius.radacct --ignore-table=radius.radpostauth
+			  --ignore-table=radius.pwd_history --ignore-table=radius.mail_notification
+			  -F --routines --events --add-locks -r "$backupPath/slave-${backupName}.sql" > /dev/null
+	RvLog "Vytvoren mysqldump databaze s nazvem ($backupPath/slave-${backupName}.sql)"
+
+	if [ "$?" -eq 0 ] && cd "$backupPath"
+	then
+		#-T otestuje archiv a --move po uspesnem testu soubor smaze
+		zip -T -m "slave-${backupName}.zip" "slave-${backupName}.sql" > /dev/null
+		RvLog "mysqldump uspesne zkomprimovan (slave-${backupName}.zip)"
 	fi
 
 	#kontroluje, zda pocet zaloh neni mensi nez backuplimit - pokud prestane zalohovat, tak nesmi mazat stare
