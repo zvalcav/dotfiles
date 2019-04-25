@@ -4,7 +4,14 @@
 #version 1.0
 
 
-#LIST _PROMENNE _EXITY _LOGOVANI _PODMINKY _KONFIGURACE _ZALOHA
+#LIST
+#_PROMENNE
+#_EXITY
+#_LOGOVANI
+#_PODMINKY
+#_KONFIGURACE
+#_POSTGRESQL_BACKUP_CRON
+#_ZALOHA
 
 
 #_PROMENNE
@@ -109,6 +116,17 @@ else
 	fi
 fi
 
+#_POSTGRESQL_BACKUP_CRON
+#pokud neni zaznam pro postgresql-backup
+if [ ! -e /etc/cron.d/postgresql-backup ]
+then
+	#vytvori radek, ktery spousti dany script ve 2:00 a kompletni debug vystup se uklada do souboru ve /var/log
+	{ 
+		echo "#denni spousteni postgresql-backup"
+		echo "0 1 * * * root $sbinDir/postgresql-backup &>$outputFile"
+	} > /etc/cron.d/postgresql-backup
+	RvLog "zapsano spousteni postgresql-backup scriptu do cronu"
+fi
 
 #_ZALOHA
 #vycteni databazi z postgresql do pole
@@ -126,8 +144,16 @@ do
 	backupNameSql="$database-${todayDateTime}.sql"
 	backupPath="$backupDir/$database/$todayDate"
 	CheckDir "$backupPath"
+
 	#provede dump databaze
-	pg_dump -U"$postgresqlUser" -w "$database" --file="$backupPath/$backupNameSql" > /dev/null
+	if [[ "$database" =~ "zabbix" ]]
+	then
+		# pokud nazev databaze obsahuje zabbix, provede dump s vynechanim tabulek history a trends - obnovovani je potreba doplnit o soubor history_trends_create.sql z /usr/local/src/zabbix-monitoring/database/postgresql
+		pg_dump -U"$postgresqlUser"  -T 'history*' -T 'trends*' -w "$database" --file="$backupPath/$backupNameSql" > /dev/null
+	else
+		# bezne zalohovani bez vynechavani
+		pg_dump -U"$postgresqlUser" -w "$database" --file="$backupPath/$backupNameSql" > /dev/null
+	fi
 	RvLog "Vytvoren postgresql-dump databaze s nazvem ($backupPath/$backupNameSql)"
 
 	if [ "$?" -eq 0 ] && cd "$backupPath"
