@@ -213,6 +213,12 @@ TestRunFile()
 			exit 6
 		fi
 	else
+		# kontrola existence slozky
+		if [ ! -d "$pidDir" ]
+		then
+			CheckDir "$pidDir"
+		fi
+
 		touch "$runFile"
 		Log "START - OK - zaznamenan zacatek scriptu ($scriptName) - ($runFile)"
 	fi
