@@ -21,7 +21,7 @@
 #_PROMENNE
 scriptName="server-backup"
 backupDir="/var/backup"
-defaultList="/root/.ssh /root/.bash_history /root/.histfile_zsh /etc /var/spool/cron /usr/local/etc"
+defaultList="/root/.ssh /root/.bash_history /root/.histfile_zsh /root/bin /etc /var/spool/cron /usr/local/etc"
 
 #cesta ke scriptu
 scriptDir="/usr/local/bash-scripts"
