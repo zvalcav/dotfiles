@@ -131,7 +131,7 @@ do
 		rv="$?"
 
 		# doplni definici chybejicich tabulek do backupu
-		cat history_trends.sql >> "$backupPath/$backupNameSql"
+		cat "$scriptDir/history_trends.sql" >> "$backupPath/$backupNameSql"
 
 		RvLog "Doplneno vytvareni tabulek history a trends do zalohy ($backupPath/$backupNameSql)"
 	else
