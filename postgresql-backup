@@ -82,21 +82,13 @@ fi
 
 
 #kontrola nastaveni promennych 
-if [ -z "$backupLimit" ] || [ -z "$postgresqlUser" ] || [ -z "$postgresqlPassword" ] || [ -z "$backupDir" ]
+if [ -z "$backupLimit" ] || [ -z "$postgresqlUser" ] || [ -z "$backupDir" ]
 then
 	LogError "nebyla nastavena nektera z promennych backupLimit=($backupLimit), postgresqlUser=($postgresqlUser), postgresqlPassword=($postgresqlPassword), backupDir=($backupDir)"
 	MailSend
 	exit 2
 else
 	export PGPASSWORD="$postgresqlPassword"
-
-	#zkontroluje, zda neni PGPASSWORD prazdna, pokud je, tak je spatne nastavene heslo v configu
-	if [ -z "$PGPASSWORD" ]
-	then
-		LogError "vyexportovana promenna PGPASSWORD neni nastavena na zadnou hodnotu, nutno nastavit v ($configFile)"
-		MailSend
-		exit 2
-	fi
 fi
 
 #_POSTGRESQL_BACKUP_CRON
@@ -133,23 +125,40 @@ do
 	then
 		# pokud nazev databaze obsahuje zabbix, provede dump s vynechanim tabulek history a trends - obnovovani je potreba doplnit o soubor history_trends_create.sql z /usr/local/src/zabbix-monitoring/database/postgresql
 		pg_dump -U"$postgresqlUser"  -T 'history*' -T 'trends*' -w "$database" --file="$backupPath/$backupNameSql" > /dev/null
+		RvLog "Vytvoren postgresql-dump databaze s nazvem ($backupPath/$backupNameSql)"
+
+		# nacte navratovou hodnotu - funkce RvLog ji vraci
+		rv="$?"
+
+		# doplni definici chybejicich tabulek do backupu
+		cat history_trends.sql >> "$backupPath/$backupNameSql"
+
+		RvLog "Doplneno vytvareni tabulek history a trends do zalohy ($backupPath/$backupNameSql)"
 	else
 		# bezne zalohovani bez vynechavani
 		pg_dump -U"$postgresqlUser" -w "$database" --file="$backupPath/$backupNameSql" > /dev/null
-	fi
-	RvLog "Vytvoren postgresql-dump databaze s nazvem ($backupPath/$backupNameSql)"
 
-	if [ "$?" -eq 0 ] && cd "$backupPath"
+		RvLog "Vytvoren postgresql-dump databaze s nazvem ($backupPath/$backupNameSql)"
+
+		# nacte navratovou hodnotu - funkce RvLog ji vraci
+		rv="$?"
+	fi
+
+	# pokud byl dump uspesny
+	if [ "$rv" -eq 0 ] && cd "$backupPath"
 	then
 		#-T otestuje archiv a --move po uspesnem testu soubor smaze
 		zip -T --move "$backupName" "$backupNameSql" > /dev/null
 		RvLog "postgresql-dump uspesne zkomprimovan ($backupName)"
+
+		# pokud bylo zazipovani uspesne
+		if [ "$?" -eq 0]
+		then
+			#odstraneni zaloh starsich nez $backupLimit
+			find "$backupDir/$database" -maxdepth 1 -mindepth 1 -type d -mtime +"$backupLimit" -exec rm -rf {} \;
+			RvLog "odstraneni starych zaloh z ($backupPath)"
+		fi
 	fi
-
-	#odstraneni zaloh starsich nez $backupLimit
-	find "$backupDir/$database" -maxdepth 1 -mindepth 1 -type d -mtime +"$backupLimit" -exec rm -rf {} \;
-	RvLog "odstraneni starych zaloh z ($backupPath)"
-
 done
 
 unset PGPASSWORD
