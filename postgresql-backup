@@ -152,7 +152,7 @@ do
 		RvLog "postgresql-dump uspesne zkomprimovan ($backupName)"
 
 		# pokud bylo zazipovani uspesne
-		if [ "$?" -eq 0]
+		if [ "$?" -eq 0 ]
 		then
 			#odstraneni zaloh starsich nez $backupLimit
 			find "$backupDir/$database" -maxdepth 1 -mindepth 1 -type d -mtime +"$backupLimit" -exec rm -rf {} \;
