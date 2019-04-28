@@ -16,7 +16,7 @@
 
 #_PROMENNE
 scriptName="postgresql-backup"
-backupDir="/var/backup/mysql"
+backupDir="/var/backup/postgresql"
 backupLimit=14
 todayDate="$(date +%F)"
 todayDateTime="$(date +%F_%H-%M)"
@@ -55,8 +55,6 @@ write(){
 	echo "postgresqlUser=\"postgres\""
 	echo "#heslo uzivatele pro postgresql"
 	echo "postgresqlPassword=\"\""
-	echo "#nastaveni cesty, kam se ukladaji zalohy"
-	echo "backupDir=\"\""
 	} > "$configFile"
 	LogError "zapsan konfiguracni soubor pro server ($HOSTNAME)"
 }
