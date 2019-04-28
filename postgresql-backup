@@ -16,29 +16,14 @@
 
 #_PROMENNE
 scriptName="postgresql-backup"
+backupDir="/var/backup/mysql"
+backupLimit=14
 todayDate="$(date +%F)"
 todayDateTime="$(date +%F_%H-%M)"
 
-
-if [ -z "$scriptDir" ]
-then
-
-	#v pripade, ze je script spousten ze slozky pracovni, nastavi se mu jine cesty, nez pri spusteni pres cron
-	if [ "$(echo $PWD | grep -c pracovni)" -eq 0 ] && [ "$(echo $0 | grep -c pracovni)" -eq 0 ]	
-	then
-
-		#cesta ke scriptu
-		scriptDir="/usr/local/scripty"
-		verbose=0
-	else
-
-		#cesta ke scriptu
-		scriptDir="/usr/local/scripty/pracovni"
-		verbose=1
-		deBug=1
-	fi  
-fi
-
+scriptDir="/usr/local/bash-scripts"
+verbose=0
+deBug=0
 
 #_EXITY
 #exit 1		#disablovany script
