@@ -121,20 +121,20 @@ do
 	CheckDir "$backupPath"
 
 	#provede dump databaze
-	if [[ "$database" =~ "zabbix" ]]
-	then
-		# pokud nazev databaze obsahuje zabbix, provede dump s vynechanim tabulek history a trends - obnovovani je potreba doplnit o soubor history_trends_create.sql z /usr/local/src/zabbix-monitoring/database/postgresql
-		pg_dump -U"$postgresqlUser"  -T 'history*' -T 'trends*' -w "$database" --file="$backupPath/$backupNameSql" > /dev/null
-		RvLog "Vytvoren postgresql-dump databaze s nazvem ($backupPath/$backupNameSql)"
+	#if [[ "$database" =~ "zabbix" ]]
+	#then
+	#	# pokud nazev databaze obsahuje zabbix, provede dump s vynechanim tabulek history a trends - obnovovani je potreba doplnit o soubor history_trends_create.sql z /usr/local/src/zabbix-monitoring/database/postgresql
+	#	pg_dump -U"$postgresqlUser"  -T 'history*' -T 'trends*' -w "$database" --file="$backupPath/$backupNameSql" > /dev/null
+	#	RvLog "Vytvoren postgresql-dump databaze s nazvem ($backupPath/$backupNameSql)"
 
-		# nacte navratovou hodnotu - funkce RvLog ji vraci
-		rv="$?"
+	#	# nacte navratovou hodnotu - funkce RvLog ji vraci
+	#	rv="$?"
 
-		# doplni definici chybejicich tabulek do backupu
-		cat "$scriptDir/history_trends.sql" >> "$backupPath/$backupNameSql"
+	#	# doplni definici chybejicich tabulek do backupu
+	#	cat "$scriptDir/history_trends.sql" >> "$backupPath/$backupNameSql"
 
-		RvLog "Doplneno vytvareni tabulek history a trends do zalohy ($backupPath/$backupNameSql)"
-	else
+	#	RvLog "Doplneno vytvareni tabulek history a trends do zalohy ($backupPath/$backupNameSql)"
+	#else
 		# bezne zalohovani bez vynechavani
 		pg_dump -U"$postgresqlUser" -w "$database" --file="$backupPath/$backupNameSql" > /dev/null
 
@@ -142,7 +142,7 @@ do
 
 		# nacte navratovou hodnotu - funkce RvLog ji vraci
 		rv="$?"
-	fi
+	#fi
 
 	# pokud byl dump uspesny
 	if [ "$rv" -eq 0 ] && cd "$backupPath"
