@@ -17,6 +17,12 @@
 #_MONTHLY
 #_COPY
 
+# pri predani parametru -x provede zapnuti debug logu
+if [ "$1" = "-x" ]
+then
+	set -x
+fi
+
 
 #_PROMENNE
 scriptName="server-backup"

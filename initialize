@@ -3,6 +3,12 @@
 sbinDir="/usr/local/sbin"
 defaultList="server-backup mysql-backup postgresql-backup check-server"
 
+# pri predani parametru -x provede zapnuti debug logu
+if [ "$1" = "-x" ]
+then
+	set -x
+fi
+
 
 #_PROMENNE
 scriptName="initialize"

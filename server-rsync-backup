@@ -4,6 +4,12 @@
 
 #LIST _PROMENNE _EXITY _LOGOVANI _KONFIGURACE _PODMINKY #_TMP-VAR #_ZALOHA
 
+# pri predani parametru -x provede zapnuti debug logu
+if [ "$1" = "-x" ]
+then
+	set -x
+fi
+
 #_PROMENNE
 #promenne se nastavuji v $config souboru, ktery se nacte, pokud existuje
 

@@ -13,6 +13,12 @@
 #_POSTGRESQL_BACKUP_CRON
 #_ZALOHA
 
+# pri predani parametru -x provede zapnuti debug logu
+if [ "$1" = "-x" ]
+then
+	set -x
+fi
+
 
 #_PROMENNE
 scriptName="postgresql-backup"
