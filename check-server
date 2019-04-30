@@ -8,7 +8,7 @@
 #_LOGOVANI 
 #_PODMINKY 
 #_KONFIGURACE 
-#_MYSQL_BACKUP_CRON
+#_CHECK_SERVER_CRON
 #_LINKOVANI_SCRIPTU
 
 # pri predani parametru -x provede zapnuti debug logu
@@ -21,7 +21,7 @@ fi
 scriptName="check-server"
 
 #seznam scriptu, ktere se budou spoustet z cron.daily, mysql-backup se bude spousten crontabem
-defaultList="check-server server-backup rsync-backup postgresql-backup"
+defaultList="check-server server-rsync-backup server-backup rsync-backup postgresql-backup"
 
 #cesta ke scriptu
 scriptDir="/usr/local/bash-scripts"
@@ -70,24 +70,16 @@ fi
 chmod -R 600 "$configDir"
 
 
-#_MYSQL_BACKUP_CRON
-#pokud neni zaznam pro mysql-backup
-if [ ! -e /etc/cron.d/mysql-backup ]
+#_CHECK_SERVER_CRON
+#pokud neni zaznam pro check-server
+if [ ! -e /etc/cron.d/check-server ]
 then
 	#vytvori radek, ktery spousti dany script ve 20:00 a kompletni debug vystup se uklada do souboru ve /var/log
 	{ 
-		echo "#denni spousteni mysql-backup"
-		echo "0 20 * * * root /bin/bash -x $scriptDir/mysql-backup &>$logDir/mysql-backup.log"
-	} > /etc/cron.d/mysql-backup
-	RvLog "zapsano spousteni mysql-backup scriptu do cronu roota"
-#pokud uz zaznam existuje
-else
-	#a stale existuje link v /etc/cron.daily, tak ho odstrani
-	if [ -e /etc/cron.daily/mysql-backup ]
-	then
-		rm /etc/cron.daily/mysql-backup
-		RvLog "odstranen link z cron.daily pro mysql-backup"
-	fi
+		echo "#denni spousteni check-server"
+		echo "0 20 * * * root /bin/bash -x $scriptDir/check-server &>$logDir/check-server.log"
+	} > /etc/cron.d/check-server
+	RvLog "zapsano spousteni check-server scriptu do cronu roota"
 fi
 
 
