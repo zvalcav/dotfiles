@@ -19,7 +19,7 @@ fi
 version=2		
 
 #slozka, kde jsou konfiguracni soubory k jednotlivym scriptum
-configDir="/usr/local/etc"
+configDir="/usr/local/etc/scripty"
 
 #konfiguracni soubor pro konkretni script
 configFile="$configDir/${scriptName}.conf"
@@ -226,6 +226,7 @@ TestRunFile()
 
 # kontrola existence slozky pro logovani
 CheckDir "$logDir"
+CheckDir "$configDir"
 
 #prida datum na konec outputFile
 echo -e "\n\nstart time: $(date +%F_%H-%M)" >> "$outputFile"
