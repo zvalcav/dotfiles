@@ -211,8 +211,8 @@ do
 
 	# udela i slave dump, aby byl pripraveny pro pripad potreby
 	mysqldump --defaults-extra-file="$mysqlDefaultsFile" "$database"\
-			  --master-data=1 --ignore-table=radius.radacct --ignore-table=radius.radpostauth
-			  --ignore-table=radius.pwd_history --ignore-table=radius.mail_notification
+			  --master-data=1 --ignore-table=radius.radacct --ignore-table=radius.radpostauth \
+			  --ignore-table=radius.pwd_history --ignore-table=radius.mail_notification \
 			  -F --routines --events --add-locks -r "$backupPath/slave-${backupName}.sql" > /dev/null
 	RvLog "Vytvoren mysqldump databaze s nazvem ($backupPath/slave-${backupName}.sql)"
 
