@@ -1,0 +1,198 @@
+#!/bin/bash
+#server-rsync-backup - provadi zalohovani serveru vuci jinemu rsync serveru na port 873
+#umoznuje v konfigu zvolit, zda je overovany, nebo ne
+
+#LIST _PROMENNE _EXITY _LOGOVANI _KONFIGURACE _PODMINKY #_TMP-VAR #_ZALOHA
+
+# pri predani parametru -x provede zapnuti debug logu
+if [ "$1" = "-x" ]
+then
+	set -x
+fi
+
+#_PROMENNE
+#promenne se nastavuji v $config souboru, ktery se nacte, pokud existuje
+
+#promenne, ktere by se moc menit nemely, ale ve vysledku je to burt
+scriptName="server-rsync-backup"
+
+#dnesni datum ve formatu YYYY-MM-DD
+todayDate="$(date +%F)"	
+
+#cesta ke scriptu
+scriptDir="/usr/local/bash-scripts"
+verbose=0
+deBug=0
+
+
+#_EXITY
+#exit 1		#spatne nastavena promenna
+#exit 2		#zapsan defaultni konfiguracni soubor
+#exit 3		#nebyl nastaven cil zaloh
+
+
+#_LOGOVANI
+
+#nacteni definice funkci Log,LogError,RvLog,MailSend z knihovny
+. $scriptDir/funkce	
+Log "script ($scriptName) - zacatek"
+echo "$$" > "$startFile"
+Log "($startFile) set to ($$)"
+
+
+#soubor s heslem, je potreba pouze pokud je nastaveno i uzivatelske jmeno
+passwordFile="$configDir/.${scriptName}.secret"
+
+#soubor s vyjimkami, defaultni polozky se do nej nahraji pri inicializaci
+excludeFile="$configDir/${scriptName}.exclude"
+
+
+#_KONFIGURACE
+#zapise konfiguracni soubor, ze ktereho bude nasledne nacitat hodnoty
+write(){
+	if [ -f "$configFile" ]
+	then
+		cp "$configFile" "${configFile}.back"
+		RvLog "{write} - provedena zaloha konfigurace do (${configFile}.back)"
+	fi
+
+	#vytvori prazdny soubor pro heslo, pokud existuje tak ho jen aktualizuje
+	touch "$passwordFile"
+	chmod 600 "$passwordFile"
+
+	#zapise defaultni seznam vyjimek, pokud jeste neexistuje
+	if [ ! -f "$excludeFile" ]
+	then
+		echo "#defaultni seznam vyjimek, nemazat
+/dev
+/proc
+/sys
+/tmp
+/run
+/lost+found
+#defaultni seznam vyjimek, nemazat
+
+#seznam veci, ktere se dale maji vyjmout ze zalohy
+" > "$excludeFile"
+
+		RvLog "{write} - zapsany soubory do souboru s vyjimkami [$excludeFile]"
+	else
+		Log "{write} - soubor s vyjimkami uz existuje, nechavam ho byt"
+	fi
+
+	echo "#disabled=1 - script se nepousti
+#disabled=0 - script se pousti
+disabled=1
+
+#pokud je vyplneno uzivatelske jmeno, provadi se autentifikace pri rsyncu
+#heslo je nutno nastavit do souboru /usr/local/etc/server-rsync-backup.secret
+#zaloha se pak provadi jako --password-file=/usr/local/etc/server-rsync-backup.secret rsyncUser@rsyncTarget
+rsyncUser=\"\"
+
+#cil, kam se bude zalohovat, tzn ip::share/zbytek/cesty
+rsyncTarget=\"ip.ad.re.sa::share/cesta\"
+
+#vyjimky je mozne nastavit v souboru /usr/local/etc/server-rsync-backup.excludes
+" > "$configFile"
+
+	RvLog "{write} - zapsan konfiguracni soubor pro server ($HOSTNAME)"
+}
+
+
+#pokud existuje konfiguracni soubor, tak ho zkusi nacist
+if [ -f "$configFile" ]
+then
+	#kdyz v nem jeste najde nfs, tak vynuti zapsani noveho
+	if [ $(grep -c "nfs" "$configFile") -ne 0 ]
+	then
+		write
+		LogError "vynuceno zapsani noveho configu, protoze obsahoval jeste nfs"
+		MailSend
+		exit 2
+	fi
+
+	. "$configFile"
+	Log "nacten konfiguracni soubor ($configFile)"
+#pokud konfiguracni soubor neexistuje, tak zapise novy
+else
+	write
+	LogError "zapsan cisty konfiguracni soubor"
+	MailSend
+	exit 2
+fi
+
+
+if [ -e /etc/cron.daily/"$scriptName" ]
+then
+	rm /etc/cron.daily/"$scriptName"
+	LogError "provedeno odstraneni automatickeho spousteni z cronu"
+else
+	Log "server se uz automaticky nespoust z cron.daily"
+fi
+
+#pri prvotnim spusteni je script defaultne disablovany
+if [ "$disabled" -eq 1 ]
+then
+	Log "script ($scriptName) je disablovany v ($configFile)"
+	MailSend
+	exit 0
+fi
+
+
+#kontrola nastaveni cile pro zalohovani, pokud obsahuje defaultni retezec, nebo je prazdna, pak zaloguje error a skonci
+if [ $(echo "$rsyncTarget" | grep -c "ip.ad.re.sa") -ne 0 ] || [ -z "$rsyncTarget" ]
+then
+	LogError "nebyl nastaven cil zalohovani v souboru [$configFile], promenna rsyncTarget"
+	MailSend
+	exit 3
+else
+	Log "zaloha se provede na [$rsyncTarget]"
+fi
+
+
+Log "Zacatek zalohovani"
+
+
+#pokud je nastavena promena s uzivatelem, pak se bude vuci serveru autentifikovat
+#verbose vystup zalohovanych souboru je v /var/log/server-rsync-backup.log
+if [ -n "$rsyncUser" ] && [ -f "$passwordFile" ]
+then
+	Log "rsync s overenim uzivatele -> [$rsyncTarget]"
+	rsync -av --delete --exclude-from="$excludeFile" --password-file="$passwordFile" / "$rsyncUser"@"$rsyncTarget" > "$logDir/${scriptName}.log"
+	RvLog "dokoncen rsync -> [$rsyncUser@$rsyncTarget]"
+	rv="$?"
+#pokud je promenna s uzivatelem prazdna, pak se nebude autentifikovat
+elif [ -z "$rsyncUser" ]
+then
+	Log "rsync bez overeni uzivatele -> [$rsyncTarget]"
+	rsync -av --delete --exclude-from="$excludeFile" / "$rsyncTarget" > "$logDir/${scriptName}.log"
+	RvLog "dokoncen rsync -> [$rsyncTarget]"
+	rv="$?"
+#pokud nenastala ani jedna moznost, pak neexistuje soubor s heslem
+else
+	LogError "nebyl nalezen soubor s heslem"
+	MailSend
+	exit 4
+fi
+
+#osetreni erroru navratovych hodnot
+case "$rv" in
+	1)
+		LogError "soubor s heslem nesmi byt citelny pro others, defaultne se mu nastavuje chmod 600 $passwordFile"
+		LogError "pokud jsou prava v poradku, tak zkontroluj, ze je nastavene heslo"
+		;;
+	5)
+		LogError "zkontroluj, zda neni problem s cestou k cili, zda neni potreba uzivatel, nebo je nastavene heslo"
+		LogError "overit to lze pomoci rsync $rsyncTarget, nebo v pripade overeneho rsyncu rsync $rsyncUser@$rsyncTarget"
+		;;
+	20)
+		LogError "rsync byl ustrelen SIGHUP, nebo neco podobneho"
+		;;
+	0)
+		Log "navratova hodnota je 0, tedy zalohovani probehlo bez potizi"
+		;;
+esac
+
+MailSend
+Log "OK - ($scriptName) zalohovani dokonceno"
+exit 0
