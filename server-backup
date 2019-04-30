@@ -61,17 +61,6 @@ write(){
 }
 
 
-#nacteni $configFile, pripadne exit
-if [ -f "$configFile" ]
-then
-	. "$configFile"
-	Log "nacten konfiguracni soubor ($configFile)"
-else
-	write
-	. "$configFile"
-fi
-
-
 #_SERVER_BACKUP_CRON
 #pokud neni zaznam pro server-backup
 if [ ! -e /etc/cron.d/server-backup ]
@@ -82,6 +71,17 @@ then
 		echo "0 22 * * * root $sbinDir/server-backup &>$outputFile"
 	} > /etc/cron.d/server-backup
 	RvLog "zapsano spousteni server-backup scriptu do cronu roota"
+fi
+
+
+#nacteni $configFile, pripadne exit
+if [ -f "$configFile" ]
+then
+	. "$configFile"
+	Log "nacten konfiguracni soubor ($configFile)"
+else
+	write
+	. "$configFile"
 fi
 
 

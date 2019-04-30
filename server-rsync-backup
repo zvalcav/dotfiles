@@ -62,6 +62,20 @@ rsyncTarget=\"uzivatel@ip.ad.re.sa:c/es/ta\"
 }
 
 
+# kontrola cron souboru
+#pokud neni zaznam pro server-rsync-backup
+if [ ! -e /etc/cron.d/server-rsync-backup ]
+then
+	#vytvori radek, ktery spousti dany script ve 2:00 a kompletni debug vystup se uklada do souboru ve /var/log
+	{ 
+		echo "#denni spousteni server-rsync-backup"
+		echo "0 4 * * * root $sbinDir/server-rsync-backup &>$outputFile"
+		echo "0 23 * * * root $sbinDir/server-rsync-backup &>$outputFile"
+	} > /etc/cron.d/server-rsync-backup
+	RvLog "zapsano spousteni server-rsync-backup scriptu do cronu"
+fi
+
+
 #pokud existuje konfiguracni soubor, tak ho zkusi nacist
 if [ -f "$configFile" ]
 then
@@ -82,20 +96,6 @@ then
 	Log "script ($scriptName) je disablovany v ($configFile)"
 	MailSend
 	exit 0
-fi
-
-
-# kontrola cron souboru
-#pokud neni zaznam pro server-rsync-backup
-if [ ! -e /etc/cron.d/server-rsync-backup ]
-then
-	#vytvori radek, ktery spousti dany script ve 2:00 a kompletni debug vystup se uklada do souboru ve /var/log
-	{ 
-		echo "#denni spousteni server-rsync-backup"
-		echo "0 4 * * * root $sbinDir/server-rsync-backup &>$outputFile"
-		echo "0 23 * * * root $sbinDir/server-rsync-backup &>$outputFile"
-	} > /etc/cron.d/server-rsync-backup
-	RvLog "zapsano spousteni server-rsync-backup scriptu do cronu"
 fi
 
 

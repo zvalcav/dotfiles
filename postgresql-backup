@@ -66,6 +66,18 @@ write(){
 }
 
 
+#_POSTGRESQL_BACKUP_CRON
+#pokud neni zaznam pro postgresql-backup
+if [ ! -e /etc/cron.d/postgresql-backup ]
+then
+	#vytvori radek, ktery spousti dany script ve 2:00 a kompletni debug vystup se uklada do souboru ve /var/log
+	{ 
+		echo "#denni spousteni postgresql-backup"
+		echo "0 1 * * * root $sbinDir/postgresql-backup &>$outputFile"
+	} > /etc/cron.d/postgresql-backup
+	RvLog "zapsano spousteni postgresql-backup scriptu do cronu"
+fi
+
 
 #nacte konfiguracni soubor
 if [ -f "$configFile" ]
@@ -97,17 +109,6 @@ else
 	export PGPASSWORD="$postgresqlPassword"
 fi
 
-#_POSTGRESQL_BACKUP_CRON
-#pokud neni zaznam pro postgresql-backup
-if [ ! -e /etc/cron.d/postgresql-backup ]
-then
-	#vytvori radek, ktery spousti dany script ve 2:00 a kompletni debug vystup se uklada do souboru ve /var/log
-	{ 
-		echo "#denni spousteni postgresql-backup"
-		echo "0 1 * * * root $sbinDir/postgresql-backup &>$outputFile"
-	} > /etc/cron.d/postgresql-backup
-	RvLog "zapsano spousteni postgresql-backup scriptu do cronu"
-fi
 
 #_ZALOHA
 #vycteni databazi z postgresql do pole
