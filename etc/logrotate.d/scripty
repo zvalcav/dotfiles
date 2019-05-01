@@ -1,7 +1,7 @@
 /var/log/scripty/*.log {
 	copytruncate
-	weekly
+	daily
 	compress
 	missingok
-	rotate 4
+	rotate 7
 }	
