@@ -3,7 +3,14 @@
 #nfspull,nfspush,local (cifs nebere v uvahu, protoze mrsi prava a nazvy souboru), lze take v configu
 #urcit, zda se budou delat hardlinkove snapshoty, nebo ne
 
-#LIST _PROMENNE _EXITY _LOGOVANI _KONFIGURACE _PODMINKY #_TMP-VAR #_ZALOHA
+#LIST
+#_PROMENNE
+#_EXITY
+#_LOGOVANI
+#_KONFIGURACE
+#_PODMINKY
+##_TMP-VAR
+##_ZALOHA
 
 # pri predani parametru -x provede zapnuti debug logu
 if [ "$1" = "-x" ]
@@ -107,6 +114,18 @@ else
 	. "$configFile"
 fi
 
+
+# kontrola cron souboru
+#pokud neni zaznam pro rsync-backup
+if [ ! -e /etc/cron.d/rsync-backup ]
+then
+	#vytvori radek, ktery spousti dany script ve 2:00 a kompletni debug vystup se uklada do souboru ve /var/log
+	{ 
+		echo "#denni spousteni rsync-backup"
+		echo "0 23 * * * root $sbinDir/rsync-backup &>$outputFile"
+	} > /etc/cron.d/rsync-backup
+	RvLog "zapsano spousteni rsync-backup scriptu do cronu"
+fi
 
 
 #pri prvotnim spusteni je script defaultne disablovany
