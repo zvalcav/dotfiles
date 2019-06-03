@@ -341,12 +341,12 @@ normal! zo
 normal! zo
 139
 normal! zo
-let s:l = 198 - ((62 * winheight(0) + 32) / 65)
+let s:l = 191 - ((55 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-198
-normal! 0
+191
+normal! 051|
 wincmd w
 argglobal
 edit Changelog
@@ -358,7 +358,7 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 14 - ((13 * winheight(0) + 32) / 65)
+let s:l = 14 - ((6 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt

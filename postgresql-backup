@@ -184,11 +184,11 @@ do
 	fi
 
 	# pokud byl dump uspesny - prohleda slozky pro prislusnou databazi a vymaze stare zalohy
-	if [ "$rv" -eq 0 ] && cd "$backupPath/$database"
+	if [ "$rv" -eq 0 ] && cd "$backupPath"
 	then
 		#odstraneni zaloh starsich nez $backupLimit
 		find "$backupDir/$database" -maxdepth 1 -mindepth 1 -type d -mtime +"$backupLimit" -exec rm -rf {} \;
-		RvLog "odstraneni starych zaloh z ($backupPath/$database)"
+		RvLog "odstraneni starych zaloh z ($backupPath)"
 	fi
 done
 
