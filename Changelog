@@ -1,0 +1,26 @@
+# backup
+1.0.0 - vychozi verze scriptu
+
+# check-server
+1.0.0 - vychozi verze scriptu
+
+# initialize
+1.0.0 - vychozi verze scriptu
+
+# mysql-backup
+1.0.0 - vychozi verze scriptu
+
+# postgresql-backup
+1.0.1 - doplnen dump databaze zabbixu s vynechanim tabulek partitions.*
+
+# rsync-backup
+1.0.0 - vychozi verze scriptu
+
+# server-backup
+1.0.0 - vychozi verze scriptu
+
+# server-rsync-backup
+1.0.0 - vychozi verze scriptu
+
+# zabbix-backup
+1.0.0 - vychozi verze scriptu - pouze pro mysql databazi

@@ -1,8 +1,11 @@
 #!/bin/bash
 #postgresql-backup
 #provadi postgresql dumpy zvolenych databazi
-#version 1.0
 
+VERSION_MAJOR=1
+VERSION_MINOR=0
+VERSION_PATCH=1
+VERSION="$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH"
 
 #LIST
 #_PROMENNE
@@ -19,6 +22,12 @@ then
 	set -x
 fi
 
+# vypsani verze
+if [ "$1" = "-V" -o "$1" = "--version" ]
+then
+	echo "$VERSION"
+	exit 0
+fi
 
 #_PROMENNE
 scriptName="postgresql-backup"
@@ -102,7 +111,8 @@ fi
 #kontrola nastaveni promennych 
 if [ -z "$backupLimit" ] || [ -z "$postgresqlUser" ] || [ -z "$backupDir" ]
 then
-	LogError "nebyla nastavena nektera z promennych backupLimit=($backupLimit), postgresqlUser=($postgresqlUser), postgresqlPassword=($postgresqlPassword), backupDir=($backupDir)"
+	LogError "nebyla nastavena nektera z promennych backupLimit=($backupLimit),\n
+						postgresqlUser=($postgresqlUser), postgresqlPassword=($postgresqlPassword), backupDir=($backupDir)"
 	MailSend
 	exit 2
 else
@@ -115,7 +125,8 @@ fi
 #-w se nepta na heslo, ale musi byt nastavena promenna PGPASSWORD
 #-At vynecha kudrlinky
 #-c prikaz predany postgresql
-backupARRAY=($(psql -U"$postgresqlUser" -w -At -c "select datname from pg_database where not datistemplate and datallowconn order by datname;"))
+backupARRAY=($(psql -U"$postgresqlUser" -w -At\
+	-c "select datname from pg_database where not datistemplate and datallowconn order by datname;"))
 RvLog "nastaveno pole backupARRAY (${backupARRAY[@]})"
 
 
@@ -127,29 +138,29 @@ do
 	backupPath="$backupDir/$database/$todayDate"
 	CheckDir "$backupPath"
 
-	#provede dump databaze
-	#if [[ "$database" =~ "zabbix" ]]
-	#then
-	#	# pokud nazev databaze obsahuje zabbix, provede dump s vynechanim tabulek history a trends - obnovovani je potreba doplnit o soubor history_trends_create.sql z /usr/local/src/zabbix-monitoring/database/postgresql
-	#	pg_dump -U"$postgresqlUser"  -T 'history*' -T 'trends*' -w "$database" --file="$backupPath/$backupNameSql" > /dev/null
-	#	RvLog "Vytvoren postgresql-dump databaze s nazvem ($backupPath/$backupNameSql)"
-
-	#	# nacte navratovou hodnotu - funkce RvLog ji vraci
-	#	rv="$?"
-
-	#	# doplni definici chybejicich tabulek do backupu
-	#	cat "$scriptDir/history_trends.sql" >> "$backupPath/$backupNameSql"
-
-	#	RvLog "Doplneno vytvareni tabulek history a trends do zalohy ($backupPath/$backupNameSql)"
-	#else
-		# bezne zalohovani bez vynechavani
-		pg_dump -U"$postgresqlUser" -w "$database" --file="$backupPath/$backupNameSql" > /dev/null
-
-		RvLog "Vytvoren postgresql-dump databaze s nazvem ($backupPath/$backupNameSql)"
+	#provede dump databaze s vynechanim tabulek v partitions - pro moznost rychle obnovy
+	if [[ "$database" =~ "zabbix" ]]
+	then
+		# pokud nazev databaze obsahuje zabbix, provede dump s vynechanim parititions tabulek pro history a trends
+		pg_dump -U"$postgresqlUser"  -T 'partitions.*' -w "$database"\
+			--file="$backupPath/small-$backupNameSql" > /dev/null
+		RvLog "Vytvoren postgresql-dump databaze s nazvem ($backupPath/small-$backupNameSql)"
 
 		# nacte navratovou hodnotu - funkce RvLog ji vraci
 		rv="$?"
-	#fi
+
+		# zalohu nebali, nemela by byt prilis velka
+		#zip -T --move "small-$backupName" "small-$backupNameSql" > /dev/null
+		#RvLog "postgresql-dump uspesne zkomprimovan (small-$backupName)"
+	fi
+
+	# bezne zalohovani bez vynechavani - vcetne pripadne databaze zabbixu
+	pg_dump -U"$postgresqlUser" -w "$database" --file="$backupPath/$backupNameSql" > /dev/null
+
+	RvLog "Vytvoren postgresql-dump databaze s nazvem ($backupPath/$backupNameSql)"
+
+	# nacte navratovou hodnotu - funkce RvLog ji vraci
+	rv="$?"
 
 	# pokud byl dump uspesny
 	if [ "$rv" -eq 0 ] && cd "$backupPath"

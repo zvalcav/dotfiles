@@ -2,6 +2,10 @@
 #server-backup
 #provadi zalohovani serveru - kopiruje nastavene adresare do nastavene slozky pro zalohovani
 
+VERSION_MAJOR=1
+VERSION_MINOR=0
+VERSION_PATCH=0
+VERSION="$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH"
 
 #LIST
 #_PROMENNE
@@ -23,6 +27,12 @@ then
 	set -x
 fi
 
+# vypsani verze
+if [ "$1" = "-V" -o "$1" = "--version" ]
+then
+	echo "$VERSION"
+	exit 0
+fi
 
 #_PROMENNE
 scriptName="server-backup"

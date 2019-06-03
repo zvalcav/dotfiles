@@ -1,4 +1,10 @@
 #!/bin/bash
+
+VERSION_MAJOR=1
+VERSION_MINOR=0
+VERSION_PATCH=0
+VERSION="$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH"
+
 #inicializacni script pro nahrani a nastaveni rsync stahovani na server
 sbinDir="/usr/local/sbin"
 defaultList="server-backup mysql-backup postgresql-backup check-server"
@@ -9,6 +15,12 @@ then
 	set -x
 fi
 
+# vypsani verze
+if [ "$1" = "-V" -o "$1" = "--version" ]
+then
+	echo "$VERSION"
+	exit 0
+fi
 
 #_PROMENNE
 scriptName="initialize"

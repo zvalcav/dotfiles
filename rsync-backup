@@ -3,6 +3,11 @@
 #nfspull,nfspush,local (cifs nebere v uvahu, protoze mrsi prava a nazvy souboru), lze take v configu
 #urcit, zda se budou delat hardlinkove snapshoty, nebo ne
 
+VERSION_MAJOR=1
+VERSION_MINOR=0
+VERSION_PATCH=0
+VERSION="$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH"
+
 #LIST
 #_PROMENNE
 #_EXITY
@@ -16,6 +21,13 @@
 if [ "$1" = "-x" ]
 then
 	set -x
+fi
+
+# vypsani verze
+if [ "$1" = "-V" -o "$1" = "--version" ]
+then
+	echo "$VERSION"
+	exit 0
 fi
 
 #_PROMENNE

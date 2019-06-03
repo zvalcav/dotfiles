@@ -2,6 +2,11 @@
 #server-rsync-backup - provadi zalohovani serveru vuci jinemu rsync serveru na port 873
 #umoznuje v konfigu zvolit, zda je overovany, nebo ne
 
+VERSION_MAJOR=1
+VERSION_MINOR=0
+VERSION_PATCH=0
+VERSION="$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH"
+
 #LIST
 #_PROMENNE
 #_EXITY
@@ -14,6 +19,13 @@
 if [ "$1" = "-x" ]
 then
 	set -x
+fi
+
+# vypsani verze
+if [ "$1" = "-V" -o "$1" = "--version" ]
+then
+	echo "$VERSION"
+	exit 0
 fi
 
 #_PROMENNE

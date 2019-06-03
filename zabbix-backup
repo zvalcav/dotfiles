@@ -1,10 +1,27 @@
 #!/bin/bash
 #zabbix-backup
-#provadi mysql dupmove zalohy pro zvolenou sluzbu a zastavuje service
+#provadi mysql dupmove zalohy pro zvolenou sluzbu a zastavuje service - nelze pouzit pro postgresql databazi
 
 
 #LIST _PROMENNE _EXITY _LOGOVANI _PODMINKY _KONFIGURACE _ZALOHA
 
+VERSION_MAJOR=1
+VERSION_MINOR=0
+VERSION_PATCH=0
+VERSION="$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH"
+
+# pri predani parametru -x provede zapnuti debug logu
+if [ "$1" = "-x" ]
+then
+	set -x
+fi
+
+# vypsani verze
+if [ "$1" = "-V" -o "$1" = "--version" ]
+then
+	echo "$VERSION"
+	exit 0
+fi
 
 #_PROMENNE
 scriptName="zabbix-backup"
