@@ -4,7 +4,7 @@
 
 VERSION_MAJOR=1
 VERSION_MINOR=0
-VERSION_PATCH=1
+VERSION_PATCH=2
 VERSION="$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH"
 
 #LIST
@@ -15,6 +15,9 @@ VERSION="$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH"
 #_KONFIGURACE
 #_POSTGRESQL_BACKUP_CRON
 #_ZALOHA
+
+# zajisti, ze pri selhani jednoho prikazu v pipe selze cela pipe
+set -o pipefail
 
 # pri predani parametru -x provede zapnuti debug logu
 if [ "$1" = "-x" ]
@@ -133,49 +136,59 @@ RvLog "nastaveno pole backupARRAY (${backupARRAY[@]})"
 #provede dumpy vsech existujicich databazi
 for database in ${backupARRAY[@]}
 do
-	backupName="$database-${todayDateTime}.zip"
 	backupNameSql="$database-${todayDateTime}.sql"
+	backupName="$backupNameSql.gz"
 	backupPath="$backupDir/$database/$todayDate"
 	CheckDir "$backupPath"
 
 	#provede dump databaze s vynechanim tabulek v partitions - pro moznost rychle obnovy
 	if [[ "$database" =~ "zabbix" ]]
 	then
+		backupBasicName="schema-$backupName"
+		backupHistoryName="history-$backupName"
+
 		# pokud nazev databaze obsahuje zabbix, provede dump s vynechanim parititions tabulek pro history a trends
-		pg_dump -U"$postgresqlUser"  -T 'partitions.*' -w "$database"\
-			--file="$backupPath/small-$backupNameSql" > /dev/null
-		RvLog "Vytvoren postgresql-dump databaze s nazvem ($backupPath/small-$backupNameSql)"
+		# sed provede okomentovani radku, ktere sahaji na plpgsql extension a gzip soubor zabali
+		pg_dump -U"$postgresqlUser"  -T 'partitions.*' -w "$database" | sed -e 's/^\(CREATE\ EXTENSION\|COMMENT\ ON\ EXTENSION\)/--&/g' | gzip > "$backupPath/$backupBasicName"
+		RvLog "Vytvoren postgresql-dump databaze s nazvem ($backupPath/$backupBasicName)"
 
 		# nacte navratovou hodnotu - funkce RvLog ji vraci
 		rv="$?"
 
-		# zalohu nebali, nemela by byt prilis velka
-		#zip -T --move "small-$backupName" "small-$backupNameSql" > /dev/null
-		#RvLog "postgresql-dump uspesne zkomprimovan (small-$backupName)"
+		# separatni dump historie a trendu
+		pg_dump -U"$postgresqlUser"  -t 'partitions.*' -w "$database" | sed -e 's/^\(CREATE\ EXTENSION\|COMMENT\ ON\ EXTENSION\)/--&/g' | gzip > "$backupPath/$backupHistoryName"
+		RvLog "Vytvoren postgresql-dump databaze s nazvem ($backupPath/$backupHistoryName)"
+
+		# okomentuje radky obsahujici upravy plpgsql extension, aby bylo mozne obnovovat pod uzivatelem zabbix
+		# pri obnovovani pomoci pg_restore to neni potreba, ale pri volani pres psql ano - uzivatel nema prava
+		#sed -e 's/^\(CREATE\ EXTENSION\|COMMENT\ ON\ EXTENSION\)/--&/g' -i  "$backupPath/backupBasicName"
+
+		Log "Zalohu lze obnovit pomoci:"
+		Log "systemctl stop zabbix-server apache2"
+		Log "psql -U postgres"
+		Log "drop database zabbix;"
+		Log "create database zabbix with owner=zabbix;"
+		Log "gunzip -c $backupPath/$backupBasicName | psql -U zabbix -d zabbix -v ON_ERROR_STOP=1"
+		# pro obnoveni historie a trendu se rozbali plna zaloha rovnou na vstup psql - na errorech nezastavuje
+		Log "gunzip -c $backupPath/$backupHistoryName | psql -U zabbix -d zabbix"
+		Log "systemctl start zabbix-server apache2"
+	# nezabixove databaze dumpne zvlast
+	else
+		# bezne zalohovani bez vynechavani - vcetne pripadne databaze zabbixu
+		pg_dump -U"$postgresqlUser" -w "$database" | gzip > "$backupPath/$backupName"
+
+		RvLog "Vytvoren postgresql-dump databaze s nazvem ($backupPath/$backupName)"
+
+		# nacte navratovou hodnotu - funkce RvLog ji vraci
+		rv="$?"
 	fi
 
-	# bezne zalohovani bez vynechavani - vcetne pripadne databaze zabbixu
-	pg_dump -U"$postgresqlUser" -w "$database" --file="$backupPath/$backupNameSql" > /dev/null
-
-	RvLog "Vytvoren postgresql-dump databaze s nazvem ($backupPath/$backupNameSql)"
-
-	# nacte navratovou hodnotu - funkce RvLog ji vraci
-	rv="$?"
-
-	# pokud byl dump uspesny
-	if [ "$rv" -eq 0 ] && cd "$backupPath"
+	# pokud byl dump uspesny - prohleda slozky pro prislusnou databazi a vymaze stare zalohy
+	if [ "$rv" -eq 0 ] && cd "$backupPath/$database"
 	then
-		#-T otestuje archiv a --move po uspesnem testu soubor smaze
-		zip -T --move "$backupName" "$backupNameSql" > /dev/null
-		RvLog "postgresql-dump uspesne zkomprimovan ($backupName)"
-
-		# pokud bylo zazipovani uspesne
-		if [ "$?" -eq 0 ]
-		then
-			#odstraneni zaloh starsich nez $backupLimit
-			find "$backupDir/$database" -maxdepth 1 -mindepth 1 -type d -mtime +"$backupLimit" -exec rm -rf {} \;
-			RvLog "odstraneni starych zaloh z ($backupPath)"
-		fi
+		#odstraneni zaloh starsich nez $backupLimit
+		find "$backupDir/$database" -maxdepth 1 -mindepth 1 -type d -mtime +"$backupLimit" -exec rm -rf {} \;
+		RvLog "odstraneni starych zaloh z ($backupPath/$database)"
 	fi
 done
 

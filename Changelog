@@ -11,6 +11,7 @@
 1.0.0 - vychozi verze scriptu
 
 # postgresql-backup
+1.0.2 - doplneno baleni male zalohy a komentovani radku s extensions
 1.0.1 - doplnen dump databaze zabbixu s vynechanim tabulek partitions.*
 
 # rsync-backup

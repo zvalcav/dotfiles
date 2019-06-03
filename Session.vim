@@ -8,17 +8,17 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 set shortmess=aoO
-badd +1 backup
-badd +1 check-server
+badd +11 backup
+badd +5 check-server
 badd +1 debug
-badd +1 funkce
-badd +1 initialize
-badd +1 mysql-backup
+badd +7 funkce
+badd +18 initialize
+badd +7 mysql-backup
 badd +25 postgresql-backup
 badd +26 rsync-backup
-badd +1 server-backup
-badd +65 server-rsync-backup
-badd +3 zabbix-backup
+badd +30 server-backup
+badd +5 server-rsync-backup
+badd +19 zabbix-backup
 badd +5 Changelog
 argglobal
 silent! argdel *
@@ -247,15 +247,7 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-129
-normal! zo
-156
-normal! zo
-136
-normal! zo
-145
-normal! zo
-169
+139
 normal! zo
 let s:l = 5 - ((4 * winheight(0) + 16) / 32)
 if s:l < 1 | let s:l = 1 | endif
@@ -337,28 +329,24 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-114
+117
 normal! zo
-115
+118
 normal! zo
-115
+118
 normal! zo
-115
+118
 normal! zo
-115
+118
 normal! zo
-136
+139
 normal! zo
-145
-normal! zo
-169
-normal! zo
-let s:l = 25 - ((24 * winheight(0) + 32) / 65)
+let s:l = 198 - ((62 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-25
-normal! 02|
+198
+normal! 0
 wincmd w
 argglobal
 edit Changelog
@@ -370,12 +358,12 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 3 - ((2 * winheight(0) + 32) / 65)
+let s:l = 14 - ((13 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-3
-normal! 0
+14
+normal! 068|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
@@ -419,11 +407,11 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 17 - ((16 * winheight(0) + 32) / 65)
+let s:l = 18 - ((17 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-17
+18
 normal! 029|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
@@ -466,11 +454,11 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 21 - ((20 * winheight(0) + 32) / 65)
+let s:l = 22 - ((21 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-21
+22
 normal! 0
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
@@ -513,11 +501,11 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 23 - ((22 * winheight(0) + 32) / 65)
+let s:l = 24 - ((23 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-23
+24
 normal! 029|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
@@ -560,11 +548,11 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 26 - ((23 * winheight(0) + 32) / 65)
+let s:l = 27 - ((24 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-26
+27
 normal! 056|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
