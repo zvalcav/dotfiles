@@ -189,7 +189,7 @@ do
 		#odstraneni zaloh starsich nez $backupLimit
 		find "$backupDir/$database" -maxdepth 1 -mindepth 1 -type d -mtime +"$backupLimit" -exec rm -rf {} \;
 		RvLog "odstraneni starych zaloh z ($backupDir/$database)"
-		cd -
+		cd - > /dev/null
 	fi
 done
 
