@@ -175,10 +175,10 @@ CheckDir "$backupDir"
 CheckDir "$backupDir/mysql"
 
 #vyliti uzivatelu z mysql vcetne opravneni - uklada se do slozky /var/backup/mysql/mysql/user-export-datum-cas.sql
-#naleva se to mysql --defaults-extra-file=/usr/local/etc/.my.cnf -A < user-export-*.sql
-mysql --defaults-extra-file=/usr/local/etc/.my.cnf -B -N -e\
+#naleva se to mysql -A < user-export-*.sql
+mysql --defaults-extra-file="$mysqlDefaultsFile" -B -N -e\
 	"SELECT DISTINCT CONCAT('SHOW GRANTS FOR \'', user, '\'@\'', host, '\';') AS query FROM mysql.user" |\
-	mysql --defaults-extra-file=/usr/local/etc/.my.cnf |\
+	mysql --defaults-extra-file="$mysqlDefaultsFile" |\
 	sed -e 's/\(GRANT .*\)/\1;/;s/^\(Grants for .*\)/## \1 ##/;/##/{x;p;x;}' -e 's/\\\\/\\/g' |\
 	grep -v "root" > "$backupDir"/mysql/user-export-"${todayDateTime}".sql
 RvLog "Zaloha uzivatelu a opravneni z mysql databaze"

@@ -11,9 +11,9 @@ set shortmess=aoO
 badd +11 backup
 badd +5 check-server
 badd +1 debug
-badd +7 funkce
+badd +22 funkce
 badd +18 initialize
-badd +7 mysql-backup
+badd +59 mysql-backup
 badd +25 postgresql-backup
 badd +26 rsync-backup
 badd +30 server-backup
@@ -159,11 +159,11 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 7 - ((6 * winheight(0) + 32) / 65)
+let s:l = 22 - ((21 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-7
+22
 normal! 0
 wincmd w
 argglobal
@@ -282,12 +282,12 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 7 - ((6 * winheight(0) + 32) / 65)
+let s:l = 185 - ((38 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-7
-normal! 015|
+185
+normal! 0
 wincmd w
 argglobal
 edit Changelog
@@ -557,7 +557,7 @@ normal! 056|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
-tabnext 7
+tabnext 6
 set stal=1
 if exists('s:wipebuf')
   silent exe 'bwipe ' . s:wipebuf
