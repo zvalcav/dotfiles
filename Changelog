@@ -8,6 +8,7 @@
 1.0.0 - vychozi verze scriptu
 
 # mysql-backup
+1.0.1 - opodminkovano vytvareni slave dumpu jen na databazi radiusu
 1.0.0 - vychozi verze scriptu
 
 # postgresql-backup
