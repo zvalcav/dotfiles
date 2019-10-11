@@ -115,7 +115,6 @@ write()
 		echo ""
 		echo "# nastavuje, do jake mysql databaze a pod jakym userem bude script sahat"
 		echo "# heslo se nastavuje v ($mysqlDefaultsFile)"
-		echo "mysqlUser=\"MYSQL_USER\""
 		echo "mysqlDatabase=\"MYSQL_DATABASE\""
 		echo ""
 		echo "# nastavuje, do jake postgresql databaze a pod jakym userem bude script sahat"
@@ -177,7 +176,7 @@ then
 fi
 
 # kontrola nacteni promennych z konfiguracniho souboru
-if [ -z "$psqlUser" -o -z "$psqlDatabase" -o -z "$mysqlUser" -o -z "$mysqlDatabase" -o -z "$mailNotification" ]
+if [ -z "$psqlUser" -o -z "$psqlDatabase" -o -z "$mysqlDatabase" -o -z "$mailNotification" ]
 then
 	LogErrorVerbose "POZOR, neni nastavena nektera z promennych v konfiguracnim souboru [$configFile]"
 	MailSend
@@ -209,7 +208,7 @@ fi
 
 # select z databaze adminusu, kdy se vypisou veskere adresy klientu
 # postgresql si je nacte do tabulky adminus_ips_get
-if ! mysql -u"$mysqlUser" --defaults-extra-file="$mysqlDefaultsFile" "$mysqlDatabase" --batch\
+if ! mysql --defaults-extra-file="$mysqlDefaultsFile" "$mysqlDatabase" --batch\
 #	-e "SELECT ip FROM adminus_ip_address;"\
 #	| grep -v "ip" | psql -U"$psqlUser" "$psqlDatabase" -c "COPY adminus_ips_get FROM stdin;" > /dev/null
 	-e "SELECT IFNULL(ip, m_adminustlapnetshaping_subnet) AS ip FROM adminus_ip_address;"\
@@ -220,18 +219,18 @@ then
 fi
 
 # vymazani tabulky pripojnych bodu pred plnenim
-if ! mysql -u"$mysqlUser" --defaults-extra-file="$mysqlDefaultsFile" "$mysqlDatabase"\
+if ! mysql --defaults-extra-file="$mysqlDefaultsFile" "$mysqlDatabase"\
 	-e "SET FOREIGN_KEY_CHECKS=0;DELETE FROM adminustlapnetshaping_shape_group;" > /dev/null
 then
-	LogErrorVerbose "Problem pri vypinani kontroly cizich klicu, nebo mazani obsahu tabulky adminustlapnetshaping_shape_group v mysql databazi: ($mysqlDatabase) pod uzivatelem: ($mysqlUser)"
+	LogErrorVerbose "Problem pri vypinani kontroly cizich klicu, nebo mazani obsahu tabulky adminustlapnetshaping_shape_group v mysql databazi: ($mysqlDatabase)"
 	exit 5
 fi
 
 
-if ! mysql -u"$mysqlUser" --defaults-extra-file="$mysqlDefaultsFile" "$mysqlDatabase"\
+if ! mysql --defaults-extra-file="$mysqlDefaultsFile" "$mysqlDatabase"\
 	-e "SET FOREIGN_KEY_CHECKS=0;TRUNCATE adminus_ip_address_range;" > /dev/null
 then
-	LogErrorVerbose "Problem pri vypinani kontroly cizich klicu, nebo mazani obsahu tabulky adminus_ip_address_range v mysql databazi: ($mysqlDatabase) pod uzivatelem: ($mysqlUser)"
+	LogErrorVerbose "Problem pri vypinani kontroly cizich klicu, nebo mazani obsahu tabulky adminus_ip_address_range v mysql databazi: ($mysqlDatabase)"
 	exit 6
 fi
 
@@ -274,9 +273,9 @@ ORDER BY groupId;" | grep -v "groupid,groupname,groupssid\|rows"\
 	| sed -e "s/,/','/g" -e "s/^/('/g" -e "s/$/'),/g" | tr '\n' ' '\
 	| sed -e "s/^/INSERT INTO adminustlapnetshaping_shape_group (id, name, identificator) VALUES/g"\
 	-e "s/, $/;/g" | tee get_group.dump\
-	| mysql -u"$mysqlUser" --defaults-extra-file="$mysqlDefaultsFile" "$mysqlDatabase" > /dev/null
+	| mysql --defaults-extra-file="$mysqlDefaultsFile" "$mysqlDatabase" > /dev/null
 then
-	LogErrorVerbose "Problem pri nacitani pripojnych bodu z postgresql databaze: ($psqlDatabase), nebo jejich uprave, nebo pri vkladani do mysql databaze: ($mysqlDatabase) do tabulky: adminustlapnetshaping_shape_group pod uzivatelem: ($mysqlUser)"
+	LogErrorVerbose "Problem pri nacitani pripojnych bodu z postgresql databaze: ($psqlDatabase), nebo jejich uprave, nebo pri vkladani do mysql databaze: ($mysqlDatabase) do tabulky: adminustlapnetshaping_shape_group"
 	exit 7
 fi
 
@@ -304,21 +303,21 @@ then
 	exit 8
 fi
 
-if ! mysql -u"$mysqlUser" --defaults-extra-file="$mysqlDefaultsFile" "$mysqlDatabase" < get_range.dump > /dev/null
+if ! mysql --defaults-extra-file="$mysqlDefaultsFile" "$mysqlDatabase" < get_range.dump > /dev/null
 then
-	LogErrorVerbose "Problem pri vkladani pripravenych subnetu pripojnych bodu do mysql databaze: ($mysqlDatabase) do tabulky: adminus_ip_address_range pod uzivatelem: ($mysqlUser)"
+	LogErrorVerbose "Problem pri vkladani pripravenych subnetu pripojnych bodu do mysql databaze: ($mysqlDatabase) do tabulky: adminus_ip_address_range"
 	exit 9
 fi
 
 # oprava autoincrementu
-if ! echo "ALTER TABLE adminustlapnetshaping_shape_group AUTO_INCREMENT = $(mysql -u"$mysqlUser" --defaults-extra-file="$mysqlDefaultsFile" "$mysqlDatabase" --silent -e "SELECT MAX(id) + 1 FROM adminustlapnetshaping_shape_group;" | grep -v "MAX")" | mysql -u"$mysqlUser" --defaults-extra-file="$mysqlDefaultsFile" "$mysqlDatabase"
+if ! echo "ALTER TABLE adminustlapnetshaping_shape_group AUTO_INCREMENT = $(mysql --defaults-extra-file="$mysqlDefaultsFile" "$mysqlDatabase" --silent -e "SELECT MAX(id) + 1 FROM adminustlapnetshaping_shape_group;" | grep -v "MAX")" | mysql --defaults-extra-file="$mysqlDefaultsFile" "$mysqlDatabase"
 then
-	LogErrorVerbose "Problem pri korekci autoincrementu tabulky adminustlapnetshaping_shape_group v mysql databazi: ($mysqlDatabase) pod uzivatelem: ($mysqlUser)"
+	LogErrorVerbose "Problem pri korekci autoincrementu tabulky adminustlapnetshaping_shape_group v mysql databazi: ($mysqlDatabase)"
 	exit 10
 fi
 
 # naparovani pripojnych bodu na smlouvy
-if ! mysql -u"$mysqlUser" --defaults-extra-file="$mysqlDefaultsFile" "$mysqlDatabase" -e "
+if ! mysql --defaults-extra-file="$mysqlDefaultsFile" "$mysqlDatabase" -e "
 UPDATE adminus_contract d
 INNER JOIN (
 	SELECT  a.shape_group_id,
