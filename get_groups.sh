@@ -201,7 +201,7 @@ then
 fi
 
 # vymazani tabulky pred jejim plnenim - POSTGRESQL - DELETE FROM TABLE
-if ! psql -U"$psqlUser" "$psqlDatabase" -c "delete from adminus_ips_get;" > /dev/null
+if ! psql -U"$psqlUser" "$psqlDatabase" -c "DELETE FROM adminus_ips_get;" > /dev/null
 then
 	LogErrorVerbose "Problem pri mazani obashu tabulky adminus_ips_get v postgresql databazi: ($psqlDatabase) pod uzivatelem: ($psqlUser)"
 	exit 2
@@ -209,11 +209,11 @@ fi
 
 # select z databaze adminusu, kdy se vypisou veskere adresy klientu
 # postgresql si je nacte do tabulky adminus_ips_get
-if ! (mysql -u"$mysqlUser" --defaults-file="$mysqlDefaultsFile" "$mysqlDatabase" --batch\
+if ! mysql -u"$mysqlUser" --defaults-file="$mysqlDefaultsFile" "$mysqlDatabase" --batch\
 #	-e "SELECT ip FROM adminus_ip_address;"\
-#	| grep -v "ip" | psql -U"$psqlU" "$psqlDatabase" -c "COPY adminus_ips_get FROM stdin;") > /dev/null
+#	| grep -v "ip" | psql -U"$psqlU" "$psqlDatabase" -c "COPY adminus_ips_get FROM stdin;" > /dev/null
 	-e "SELECT IFNULL(ip, m_adminustlapnetshaping_subnet) AS ip FROM adminus_ip_address;"\
-	| grep -v "ip" | psql -U"$psqlU" "$psqlDatabase" -c "COPY adminus_ips_get FROM stdin;") > /dev/null
+	| grep -v "ip" | psql -U"$psqlU" "$psqlDatabase" -c "COPY adminus_ips_get FROM stdin;" > /dev/null
 then
 	LogErrorVerbose "Problem pri selectu z tabulky adminus_ip_address v mysql databazi: ($mysqlDatabase) nebo jejim vkladani do tabulky adminus_ips_get v postgresql databazi: ($psqlDatabase) pod uzivatelem: ($psqlUser)"
 	exit 3
@@ -239,7 +239,7 @@ fi
 # sed nahrazuje zacatky a konce radku prislusnou zavorkou a veskere hodntoy obali '',
 # za ukoncovaci zavorku tez doplni carku a tr to spoji do jedne lajny, na zaver se na zacatek prida insert into
 # a na konci se nahradi , za ; - pak se to cele skrz pipe posle do mysql
-if ! (psql -U"$psqlU" "$psqlDatabase" -A -F, -c "
+if ! psql -U"$psqlU" "$psqlDatabase" -A -F, -c "
 SELECT
    i.nms_device_interface_id AS groupId,
    CONCAT(UNACCENT(e.name), ' / ', UNACCENT(d.identificator), ' / ', UNACCENT(c.identificator), ' / ', UNACCENT(b.name)) AS groupName,
@@ -274,7 +274,7 @@ ORDER BY groupId;" | grep -v "groupid,groupname,groupssid\|rows"\
 	| sed -e "s/,/','/g" -e "s/^/('/g" -e "s/$/'),/g" | tr '\n' ' '\
 	| sed -e "s/^/INSERT INTO adminustlapnetshaping_shape_group (id, name, identificator) VALUES/g"\
 	-e "s/, $/;/g" | tee get_group.dump\
-	| mysql -u"$mysqlUser" --defaults-file="$mysqlDefaultsFile" "$mysqlDatabase") > /dev/null
+	| mysql -u"$mysqlUser" --defaults-file="$mysqlDefaultsFile" "$mysqlDatabase" > /dev/null
 then
 	LogErrorVerbose "Problem pri nacitani pripojnych bodu z postgresql databaze: ($psqlDatabase), nebo jejich uprave, nebo pri vkladani do mysql databaze: ($mysqlDatabase) do tabulky: adminustlapnetshaping_shape_group pod uzivatelem: ($mysqlUser)"
 	exit 7
@@ -284,7 +284,7 @@ fi
 echo "SET FOREIGN_KEY_CHECKS=0;" > get_range.dump
 
 # naplneni tabulky subnetu z NMS
-if ! (psql -U"$psqlU" "$psqlDatabase" -A -F, -c "
+if ! psql -U"$psqlU" "$psqlDatabase" -A -F, -c "
 SELECT
    i.nms_device_interface_id AS groupId,
    network(INET(i.ipv4)) AS range,
@@ -298,7 +298,7 @@ GROUP BY groupId, range, intstart, intend
 ORDER BY groupId;" | grep\
 	-v "groupid,range,intstart,intend\|rows" | sed -e "s/,/','/g" -e "s/^/('/g" -e "s/$/'),/g" | tr '\n' ' '\
 	| sed -e 's/^/INSERT INTO adminus_ip_address_range (shape_group_id, `range`, intstart, intend) VALUES/g'\
-	-e "s/, $/;/g") >> get_range.dump
+	-e "s/, $/;/g" >> get_range.dump
 then
 	LogErrorVerbose "Problem pri nacitani subnetu pripojnych bodu z postgresql databaze: ($psqlDatabase), nebo jejich uprave, nebo pri priprave na vkladani do mysql databaze: ($mysqlDatabase) do tabulky: adminus_ip_address_range"
 	exit 8
@@ -311,7 +311,7 @@ then
 fi
 
 # oprava autoincrementu
-if ! (echo "ALTER TABLE adminustlapnetshaping_shape_group AUTO_INCREMENT = $(mysql -u"$mysqlUser" --defaults-file="$mysqlDefaultsFile" "$mysqlDatabase" --silent -e "SELECT MAX(id) + 1 FROM adminustlapnetshaping_shape_group;" | grep -v "MAX")" | mysql -u"$mysqlUser" --defaults-file="$mysqlDefaultsFile" "$mysqlDatabase")
+if ! echo "ALTER TABLE adminustlapnetshaping_shape_group AUTO_INCREMENT = $(mysql -u"$mysqlUser" --defaults-file="$mysqlDefaultsFile" "$mysqlDatabase" --silent -e "SELECT MAX(id) + 1 FROM adminustlapnetshaping_shape_group;" | grep -v "MAX")" | mysql -u"$mysqlUser" --defaults-file="$mysqlDefaultsFile" "$mysqlDatabase"
 then
 	LogErrorVerbose "Problem pri korekci autoincrementu tabulky adminustlapnetshaping_shape_group v mysql databazi: ($mysqlDatabase) pod uzivatelem: ($mysqlUser)"
 	exit 10
