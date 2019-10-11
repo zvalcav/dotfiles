@@ -20,7 +20,7 @@ badd +30 server-backup
 badd +5 server-rsync-backup
 badd +19 zabbix-backup
 badd +8 Changelog
-badd +63 get_groups.sh
+badd +180 get_groups.sh
 argglobal
 silent! argdel *
 set stal=2
@@ -225,12 +225,12 @@ normal! zo
 normal! zo
 97
 normal! zo
-let s:l = 180 - ((53 * winheight(0) + 32) / 65)
+let s:l = 188 - ((40 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-180
-normal! 054|
+188
+normal! 095|
 wincmd w
 argglobal
 edit Changelog
@@ -242,7 +242,7 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 8 - ((6 * winheight(0) + 32) / 65)
+let s:l = 8 - ((7 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt

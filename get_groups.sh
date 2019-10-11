@@ -185,7 +185,7 @@ then
 fi
 
 # kontrola vychozich hodnot konfiguracniho souboru
-if [ $(grep -c "POSTGRESQL_DATABASE\|POSTGRESQL_USER\|MYSQL_DATABASE\|MYSQL_USER") -ne 0 ]
+if [ $(grep -c "POSTGRESQL_DATABASE\|POSTGRESQL_USER\|MYSQL_DATABASE\|MYSQL_USER" "$configFile") -ne 0 ]
 then
 	LogErrorVerbose "POZOR, neni nastavena nektera z promennych v konfiguracnim souboru [$configFile]"
 	MailSend
