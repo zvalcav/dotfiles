@@ -211,9 +211,9 @@ fi
 # postgresql si je nacte do tabulky adminus_ips_get
 if ! mysql -u"$mysqlUser" --defaults-file="$mysqlDefaultsFile" "$mysqlDatabase" --batch\
 #	-e "SELECT ip FROM adminus_ip_address;"\
-#	| grep -v "ip" | psql -U"$psqlU" "$psqlDatabase" -c "COPY adminus_ips_get FROM stdin;" > /dev/null
+#	| grep -v "ip" | psql -U"$psqlUser" "$psqlDatabase" -c "COPY adminus_ips_get FROM stdin;" > /dev/null
 	-e "SELECT IFNULL(ip, m_adminustlapnetshaping_subnet) AS ip FROM adminus_ip_address;"\
-	| grep -v "ip" | psql -U"$psqlU" "$psqlDatabase" -c "COPY adminus_ips_get FROM stdin;" > /dev/null
+	| grep -v "ip" | psql -U"$psqlUser" "$psqlDatabase" -c "COPY adminus_ips_get FROM stdin;" > /dev/null
 then
 	LogErrorVerbose "Problem pri selectu z tabulky adminus_ip_address v mysql databazi: ($mysqlDatabase) nebo jejim vkladani do tabulky adminus_ips_get v postgresql databazi: ($psqlDatabase) pod uzivatelem: ($psqlUser)"
 	exit 3
@@ -239,7 +239,7 @@ fi
 # sed nahrazuje zacatky a konce radku prislusnou zavorkou a veskere hodntoy obali '',
 # za ukoncovaci zavorku tez doplni carku a tr to spoji do jedne lajny, na zaver se na zacatek prida insert into
 # a na konci se nahradi , za ; - pak se to cele skrz pipe posle do mysql
-if ! psql -U"$psqlU" "$psqlDatabase" -A -F, -c "
+if ! psql -U"$psqlUser" "$psqlDatabase" -A -F, -c "
 SELECT
    i.nms_device_interface_id AS groupId,
    CONCAT(UNACCENT(e.name), ' / ', UNACCENT(d.identificator), ' / ', UNACCENT(c.identificator), ' / ', UNACCENT(b.name)) AS groupName,
@@ -284,7 +284,7 @@ fi
 echo "SET FOREIGN_KEY_CHECKS=0;" > get_range.dump
 
 # naplneni tabulky subnetu z NMS
-if ! psql -U"$psqlU" "$psqlDatabase" -A -F, -c "
+if ! psql -U"$psqlUser" "$psqlDatabase" -A -F, -c "
 SELECT
    i.nms_device_interface_id AS groupId,
    network(INET(i.ipv4)) AS range,
