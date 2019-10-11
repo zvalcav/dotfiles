@@ -124,14 +124,14 @@ write()
 		echo "psqlDatabase=\"POSTGRESQL_DATABASE\""
 	} > "$configFile"
 
-	LogError "zapsan konfiguracni soubor ($configFile) pro server ($HOSTNAME) - nutno upravit"
+	LogErrorVerbose "zapsan konfiguracni soubor ($configFile) pro server ($HOSTNAME) - nutno upravit"
 
 	# pri zapisu konfiguracniho souboru zapise i vychozi soubory pro pristup
 	write_mysqlDefaultsFile
-	LogError "zapsan novy konfiguracni soubor ($mysqlDefaultsFile) pro server ($HOSTNAME) - nutno upravit"
+	LogErrorVerbose "zapsan novy konfiguracni soubor ($mysqlDefaultsFile) pro server ($HOSTNAME) - nutno upravit"
 
 	write_postgresqlDefaultsFile
-	LogError "zapsan novy konfiguracni soubor ($postgresqlDefaultsFile) pro server ($HOSTNAME) - nutno upravit"
+	LogErrorVerbose "zapsan novy konfiguracni soubor ($postgresqlDefaultsFile) pro server ($HOSTNAME) - nutno upravit"
 }
 
 #pokud neni konfiguracni soubor, nebo byl predan parametr -c
@@ -148,14 +148,14 @@ then
 	. "$configFile"
 	Log "nacten konfiguracni soubor ($configFile)"
 else
-	LogError "Nebyl nalezen konfiguracni soubor ($configFile)"
+	LogErrorVerbose "Nebyl nalezen konfiguracni soubor ($configFile)"
 	exit 13
 fi
 
 #nastavenim disabled na 1 se vypne spousteni scriptu, uprav $configFile, mail se neposila
 if [ "$disabled" -eq 1 ]
 then
-	Log "script ($scriptName) byl disablovan v konfiguracnim souboru ($configFile)"
+	LogErrorVerbose "script ($scriptName) byl disablovan v konfiguracnim souboru ($configFile)"
 	MailSend
 	exit 14
 fi
@@ -163,7 +163,7 @@ fi
 #kontrola, zda mysqlPassword neobsahuje vychozi heslo
 if [ -f "$mysqlDefaultsFile" -a $(grep -c "MYSQL_PASSWORD" "$mysqlDefaultsFile") -ne 0 ]
 then
-	LogError "POZOR, neni nastaveno heslo pro mysql-backup v [$mysqlDefaultsFile]"
+	LogErrorVerbose "POZOR, neni nastaveno heslo pro mysql-backup v [$mysqlDefaultsFile]"
 	MailSend
 	exit 15
 fi
@@ -171,7 +171,7 @@ fi
 #kontrola, zda mysqlPassword neobsahuje vychozi heslo
 if [ -f "$postgresqlDefaultsFile" -a $(grep -c "DATABASE:USER:PASSWORD" "$postgresqlDefaultsFile") -ne 0 ]
 then
-	LogError "POZOR, neni nastaveno heslo pro pristup do postgresql v [$postgresqlDefaultsFile]"
+	LogErrorVerbose "POZOR, neni nastaveno heslo pro pristup do postgresql v [$postgresqlDefaultsFile]"
 	MailSend
 	exit 16
 fi
@@ -179,7 +179,7 @@ fi
 # kontrola nacteni promennych z konfiguracniho souboru
 if [ -z "$psqlUser" -o -z "$psqlDatabase" -o -z "$myselUser" -o -z "$mysqlDatabase" -o -z "$mailNotification" ]
 then
-	LogError "POZOR, neni nastavena nektera z promennych v konfiguracnim souboru [$configFile]"
+	LogErrorVerbose "POZOR, neni nastavena nektera z promennych v konfiguracnim souboru [$configFile]"
 	MailSend
 	exit 17
 fi
@@ -187,7 +187,7 @@ fi
 # kontrola vychozich hodnot konfiguracniho souboru
 if [ $(grep -c "POSTGRESQL_DATABASE\|POSTGRESQL_USER\|MYSQL_DATABASE\|MYSQL_USER") -ne 0 ]
 then
-	LogError "POZOR, neni nastavena nektera z promennych v konfiguracnim souboru [$configFile]"
+	LogErrorVerbose "POZOR, neni nastavena nektera z promennych v konfiguracnim souboru [$configFile]"
 	MailSend
 	exit 18
 fi
@@ -196,14 +196,14 @@ fi
 if ! psql -U"$psqlUser" "$psqlDatabase"\
 	-c "CREATE TABLE IF NOT EXISTS adminus_ips_get (ip varchar(40));" &> /dev/null
 then
-	LogError "Problem pri tvorbe tabulky adminus_ips_get v postgresql databazi: ($psqlDatabase) pod uzivatelem: ($psqlUser)"
+	LogErrorVerbose "Problem pri tvorbe tabulky adminus_ips_get v postgresql databazi: ($psqlDatabase) pod uzivatelem: ($psqlUser)"
 	exit 1
 fi
 
 # vymazani tabulky pred jejim plnenim - POSTGRESQL - DELETE FROM TABLE
 if ! psql -U"$psqlU" "$psqlDatabase" -c "delete from adminus_ips_get;" > /dev/null
 then
-	LogError "Problem pri mazani obashu tabulky adminus_ips_get v postgresql databazi: ($psqlDatabase) pod uzivatelem: ($psqlUser)"
+	LogErrorVerbose "Problem pri mazani obashu tabulky adminus_ips_get v postgresql databazi: ($psqlDatabase) pod uzivatelem: ($psqlUser)"
 	exit 2
 fi
 
@@ -215,7 +215,7 @@ if ! (mysql -u"$mysqlUser" --defaults-file="$mysqlDefaultsFile" "$mysqlDatabase"
 	-e "SELECT IFNULL(ip, m_adminustlapnetshaping_subnet) AS ip FROM adminus_ip_address;"\
 	| grep -v "ip" | psql -U"$psqlU" "$psqlDatabase" -c "COPY adminus_ips_get FROM stdin;") > /dev/null
 then
-	LogError "Problem pri selectu z tabulky adminus_ip_address v mysql databazi: ($mysqlDatabase) nebo jejim vkladani do tabulky adminus_ips_get v postgresql databazi: ($psqlDatabase) pod uzivatelem: ($psqlUser)"
+	LogErrorVerbose "Problem pri selectu z tabulky adminus_ip_address v mysql databazi: ($mysqlDatabase) nebo jejim vkladani do tabulky adminus_ips_get v postgresql databazi: ($psqlDatabase) pod uzivatelem: ($psqlUser)"
 	exit 3
 fi
 
@@ -223,7 +223,7 @@ fi
 if ! mysql -u"$mysqlUser" --defaults-file="$mysqlDefaultsFile" "$mysqlDatabase"\
 	-e "SET FOREIGN_KEY_CHECKS=0;DELETE FROM adminustlapnetshaping_shape_group;" > /dev/null
 then
-	LogError "Problem pri vypinani kontroly cizich klicu, nebo mazani obsahu tabulky adminustlapnetshaping_shape_group v mysql databazi: ($mysqlDatabase) pod uzivatelem: ($mysqlUser)"
+	LogErrorVerbose "Problem pri vypinani kontroly cizich klicu, nebo mazani obsahu tabulky adminustlapnetshaping_shape_group v mysql databazi: ($mysqlDatabase) pod uzivatelem: ($mysqlUser)"
 	exit 5
 fi
 
@@ -231,7 +231,7 @@ fi
 if ! mysql -u"$mysqlUser" --defaults-file="$mysqlDefaultsFile" "$mysqlDatabase"\
 	-e "SET FOREIGN_KEY_CHECKS=0;TRUNCATE adminus_ip_address_range;" > /dev/null
 then
-	LogError "Problem pri vypinani kontroly cizich klicu, nebo mazani obsahu tabulky adminus_ip_address_range v mysql databazi: ($mysqlDatabase) pod uzivatelem: ($mysqlUser)"
+	LogErrorVerbose "Problem pri vypinani kontroly cizich klicu, nebo mazani obsahu tabulky adminus_ip_address_range v mysql databazi: ($mysqlDatabase) pod uzivatelem: ($mysqlUser)"
 	exit 6
 fi
 
@@ -276,7 +276,7 @@ ORDER BY groupId;" | grep -v "groupid,groupname,groupssid\|rows"\
 	-e "s/, $/;/g" | tee get_group.dump\
 	| mysql -u"$mysqlUser" --defaults-file="$mysqlDefaultsFile" "$mysqlDatabase") > /dev/null
 then
-	LogError "Problem pri nacitani pripojnych bodu z postgresql databaze: ($psqlDatabase), nebo jejich uprave, nebo pri vkladani do mysql databaze: ($mysqlDatabase) do tabulky: adminustlapnetshaping_shape_group pod uzivatelem: ($mysqlUser)"
+	LogErrorVerbose "Problem pri nacitani pripojnych bodu z postgresql databaze: ($psqlDatabase), nebo jejich uprave, nebo pri vkladani do mysql databaze: ($mysqlDatabase) do tabulky: adminustlapnetshaping_shape_group pod uzivatelem: ($mysqlUser)"
 	exit 7
 fi
 
@@ -300,20 +300,20 @@ ORDER BY groupId;" | grep\
 	| sed -e 's/^/INSERT INTO adminus_ip_address_range (shape_group_id, `range`, intstart, intend) VALUES/g'\
 	-e "s/, $/;/g") >> get_range.dump
 then
-	LogError "Problem pri nacitani subnetu pripojnych bodu z postgresql databaze: ($psqlDatabase), nebo jejich uprave, nebo pri priprave na vkladani do mysql databaze: ($mysqlDatabase) do tabulky: adminus_ip_address_range"
+	LogErrorVerbose "Problem pri nacitani subnetu pripojnych bodu z postgresql databaze: ($psqlDatabase), nebo jejich uprave, nebo pri priprave na vkladani do mysql databaze: ($mysqlDatabase) do tabulky: adminus_ip_address_range"
 	exit 8
 fi
 
 if ! mysql -u"$mysqlUser" --defaults-file="$mysqlDefaultsFile" "$mysqlDatabase" < get_range.dump > /dev/null
 then
-	LogError "Problem pri vkladani pripravenych subnetu pripojnych bodu do mysql databaze: ($mysqlDatabase) do tabulky: adminus_ip_address_range pod uzivatelem: ($mysqlUser)"
+	LogErrorVerbose "Problem pri vkladani pripravenych subnetu pripojnych bodu do mysql databaze: ($mysqlDatabase) do tabulky: adminus_ip_address_range pod uzivatelem: ($mysqlUser)"
 	exit 9
 fi
 
 # oprava autoincrementu
 if ! (echo "ALTER TABLE adminustlapnetshaping_shape_group AUTO_INCREMENT = $(mysql -u"$mysqlUser" --defaults-file="$mysqlDefaultsFile" "$mysqlDatabase" --silent -e "SELECT MAX(id) + 1 FROM adminustlapnetshaping_shape_group;" | grep -v "MAX")" | mysql -u"$mysqlUser" --defaults-file="$mysqlDefaultsFile" "$mysqlDatabase")
 then
-	LogError "Problem pri korekci autoincrementu tabulky adminustlapnetshaping_shape_group v mysql databazi: ($mysqlDatabase) pod uzivatelem: ($mysqlUser)"
+	LogErrorVerbose "Problem pri korekci autoincrementu tabulky adminustlapnetshaping_shape_group v mysql databazi: ($mysqlDatabase) pod uzivatelem: ($mysqlUser)"
 	exit 10
 fi
 

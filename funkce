@@ -100,6 +100,13 @@ LogError(){
 }
 
 
+#_LOGERROR
+LogErrorVerbose(){
+	#provede ERROR zapis predaneho parametru do logu s nazvnem scriptu v (/var/log/scripty)
+	echo "$(date '+%b %d %T') $HOSTNAME $scriptName:(Error)[$$]: $1" >> "$logFile"
+	echo  -e "\e[1;91m $(date '+%b %d %T') $HOSTNAME $scriptName:(Error)[$$]: $1 \e[0m"
+} 
+
 #_RvLog
 RvLog(){
 	#provede kontrolu navratove hodnoty, v pripade, ze je 0, provede zalogovani predaneho parametru

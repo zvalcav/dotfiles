@@ -11,7 +11,7 @@ set shortmess=aoO
 badd +11 backup
 badd +5 check-server
 badd +1 debug
-badd +138 funkce
+badd +205 funkce
 badd +18 initialize
 badd +202 mysql-backup
 badd +25 postgresql-backup
@@ -19,8 +19,8 @@ badd +26 rsync-backup
 badd +30 server-backup
 badd +5 server-rsync-backup
 badd +19 zabbix-backup
-badd +11 Changelog
-badd +321 get_groups.sh
+badd +8 Changelog
+badd +140 get_groups.sh
 argglobal
 silent! argdel *
 set stal=2
@@ -160,24 +160,24 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-125
+132
 normal! zo
-136
+143
 normal! zo
-171
+178
 normal! zo
-203
+210
 normal! zo
-205
+212
 normal! zo
-224
+231
 normal! zo
-let s:l = 205 - ((32 * winheight(0) + 32) / 65)
+let s:l = 104 - ((55 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-205
-normal! 023|
+104
+normal! 015|
 wincmd w
 argglobal
 edit Changelog
@@ -225,11 +225,11 @@ normal! zo
 normal! zo
 97
 normal! zo
-let s:l = 133 - ((59 * winheight(0) + 32) / 65)
+let s:l = 63 - ((32 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-133
+63
 normal! 030|
 wincmd w
 argglobal
@@ -242,13 +242,14 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 8 - ((7 * winheight(0) + 32) / 65)
+let s:l = 8 - ((6 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 8
 normal! 057|
 wincmd w
+2wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
 tabedit initialize
