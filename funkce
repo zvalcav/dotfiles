@@ -118,7 +118,7 @@ RvLog(){
 MailSend(){
 	#posle errory z prubehu, pokud se nejake zapsaly do $errorFile - pouze z duvodu kompatibility a 
 	# pouziti ve vsech scriptech - maily neposila - jen loguje
-	
+
 	#odstranuje vzdy, krome pripadu,  kdy je predan parametr keep
 	#ten se predava pouze pri kontrole pomoci funkce TestRunFile()
 	#je to ochrana pred pripadnym smazanim runFile u stale beziciho scriptu
@@ -133,7 +133,14 @@ MailSend(){
 
 	if [ -e "$errorFile" ]
 	then
-		LogError "MailSend - script ($scriptName) - nastaly problemy"
+		LogError "MailSend - script ($scriptName) - nastaly problemy, posilam mailem vystup"
+
+		# pokud jsou pro script definovany mailove notifikace
+		if [ -n "$mailNotification" ]
+		then
+			cat "$logFile" | grep "$scriptName" | mail -s "ERROR - ($scriptName) - ($HOSTNAME)" "$mailNotification"
+		fi
+
 		return 11
 	else
 		touch "$stopFile"
