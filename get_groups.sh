@@ -201,7 +201,7 @@ then
 fi
 
 # vymazani tabulky pred jejim plnenim - POSTGRESQL - DELETE FROM TABLE
-if ! psql -U"$psqlU" "$psqlDatabase" -c "delete from adminus_ips_get;" > /dev/null
+if ! psql -U"$psqlUser" "$psqlDatabase" -c "delete from adminus_ips_get;" > /dev/null
 then
 	LogErrorVerbose "Problem pri mazani obashu tabulky adminus_ips_get v postgresql databazi: ($psqlDatabase) pod uzivatelem: ($psqlUser)"
 	exit 2
