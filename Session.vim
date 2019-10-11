@@ -11,7 +11,7 @@ set shortmess=aoO
 badd +11 backup
 badd +5 check-server
 badd +1 debug
-badd +205 funkce
+badd +104 funkce
 badd +18 initialize
 badd +202 mysql-backup
 badd +25 postgresql-backup
@@ -20,7 +20,7 @@ badd +30 server-backup
 badd +5 server-rsync-backup
 badd +19 zabbix-backup
 badd +8 Changelog
-badd +140 get_groups.sh
+badd +63 get_groups.sh
 argglobal
 silent! argdel *
 set stal=2
@@ -225,12 +225,12 @@ normal! zo
 normal! zo
 97
 normal! zo
-let s:l = 63 - ((32 * winheight(0) + 32) / 65)
+let s:l = 180 - ((53 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-63
-normal! 030|
+180
+normal! 054|
 wincmd w
 argglobal
 edit Changelog
@@ -249,7 +249,6 @@ normal! zt
 8
 normal! 057|
 wincmd w
-2wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
 tabedit initialize

@@ -177,7 +177,7 @@ then
 fi
 
 # kontrola nacteni promennych z konfiguracniho souboru
-if [ -z "$psqlUser" -o -z "$psqlDatabase" -o -z "$myselUser" -o -z "$mysqlDatabase" -o -z "$mailNotification" ]
+if [ -z "$psqlUser" -o -z "$psqlDatabase" -o -z "$mysqlUser" -o -z "$mysqlDatabase" -o -z "$mailNotification" ]
 then
 	LogErrorVerbose "POZOR, neni nastavena nektera z promennych v konfiguracnim souboru [$configFile]"
 	MailSend
