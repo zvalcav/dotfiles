@@ -130,7 +130,7 @@ write()
 	write_mysqlDefaultsFile
 	LogError "zapsan novy konfiguracni soubor ($mysqlDefaultsFile) pro server ($HOSTNAME) - nutno upravit"
 
-	write_postgresqlDefaultsFile()
+	write_postgresqlDefaultsFile
 	LogError "zapsan novy konfiguracni soubor ($postgresqlDefaultsFile) pro server ($HOSTNAME) - nutno upravit"
 }
 

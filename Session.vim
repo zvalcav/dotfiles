@@ -8,17 +8,17 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 set shortmess=aoO
-badd +1 backup
-badd +1 check-server
+badd +11 backup
+badd +5 check-server
 badd +1 debug
-badd +1 funkce
-badd +1 initialize
-badd +1 mysql-backup
+badd +138 funkce
+badd +18 initialize
+badd +202 mysql-backup
 badd +25 postgresql-backup
-badd +1 rsync-backup
-badd +1 server-backup
-badd +1 server-rsync-backup
-badd +1 zabbix-backup
+badd +26 rsync-backup
+badd +30 server-backup
+badd +5 server-rsync-backup
+badd +19 zabbix-backup
 badd +11 Changelog
 badd +321 get_groups.sh
 argglobal
@@ -160,20 +160,24 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-122
+125
 normal! zo
 136
+normal! zo
+171
 normal! zo
 203
 normal! zo
 205
 normal! zo
-let s:l = 138 - ((33 * winheight(0) + 32) / 65)
+224
+normal! zo
+let s:l = 205 - ((32 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-138
-normal! 06|
+205
+normal! 023|
 wincmd w
 argglobal
 edit Changelog
@@ -221,12 +225,12 @@ normal! zo
 normal! zo
 97
 normal! zo
-let s:l = 321 - ((44 * winheight(0) + 32) / 65)
+let s:l = 133 - ((59 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-321
-normal! 0
+133
+normal! 030|
 wincmd w
 argglobal
 edit Changelog
