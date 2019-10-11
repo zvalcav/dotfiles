@@ -208,9 +208,10 @@ fi
 
 # select z databaze adminusu, kdy se vypisou veskere adresy klientu
 # postgresql si je nacte do tabulky adminus_ips_get
-if ! mysql --defaults-extra-file="$mysqlDefaultsFile" "$mysqlDatabase" --batch\
+# pro tlapneti administrativu je nazev tabulky jiny
 #	-e "SELECT ip FROM adminus_ip_address;"\
 #	| grep -v "ip" | psql -U"$psqlUser" "$psqlDatabase" -c "COPY adminus_ips_get FROM stdin;" > /dev/null
+if ! mysql --defaults-extra-file="$mysqlDefaultsFile" "$mysqlDatabase" --batch\
 	-e "SELECT IFNULL(ip, m_adminustlapnetshaping_subnet) AS ip FROM adminus_ip_address;"\
 	| grep -v "ip" | psql -U"$psqlUser" "$psqlDatabase" -c "COPY adminus_ips_get FROM stdin;" > /dev/null
 then
