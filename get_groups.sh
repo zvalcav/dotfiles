@@ -148,6 +148,7 @@ then
 	Log "nacten konfiguracni soubor ($configFile)"
 else
 	LogErrorVerbose "Nebyl nalezen konfiguracni soubor ($configFile)"
+	MailSend
 	exit 13
 fi
 
@@ -196,6 +197,7 @@ if ! psql -U"$psqlUser" "$psqlDatabase"\
 	-c "CREATE TABLE IF NOT EXISTS adminus_ips_get (ip varchar(40));" &> /dev/null
 then
 	LogErrorVerbose "Problem pri tvorbe tabulky adminus_ips_get v postgresql databazi: ($psqlDatabase) pod uzivatelem: ($psqlUser)"
+	MailSend
 	exit 1
 fi
 
@@ -203,6 +205,7 @@ fi
 if ! psql -U"$psqlUser" "$psqlDatabase" -c "DELETE FROM adminus_ips_get;" > /dev/null
 then
 	LogErrorVerbose "Problem pri mazani obashu tabulky adminus_ips_get v postgresql databazi: ($psqlDatabase) pod uzivatelem: ($psqlUser)"
+	MailSend
 	exit 2
 fi
 
@@ -216,6 +219,7 @@ if ! mysql --defaults-extra-file="$mysqlDefaultsFile" "$mysqlDatabase" --batch\
 	| grep -v "ip" | psql -U"$psqlUser" "$psqlDatabase" -c "COPY adminus_ips_get FROM stdin;" > /dev/null
 then
 	LogErrorVerbose "Problem pri selectu z tabulky adminus_ip_address v mysql databazi: ($mysqlDatabase) nebo jejim vkladani do tabulky adminus_ips_get v postgresql databazi: ($psqlDatabase) pod uzivatelem: ($psqlUser)"
+	MailSend
 	exit 3
 fi
 
@@ -224,6 +228,7 @@ if ! mysql --defaults-extra-file="$mysqlDefaultsFile" "$mysqlDatabase"\
 	-e "SET FOREIGN_KEY_CHECKS=0;DELETE FROM adminustlapnetshaping_shape_group;" > /dev/null
 then
 	LogErrorVerbose "Problem pri vypinani kontroly cizich klicu, nebo mazani obsahu tabulky adminustlapnetshaping_shape_group v mysql databazi: ($mysqlDatabase)"
+	MailSend
 	exit 5
 fi
 
@@ -232,6 +237,7 @@ if ! mysql --defaults-extra-file="$mysqlDefaultsFile" "$mysqlDatabase"\
 	-e "SET FOREIGN_KEY_CHECKS=0;TRUNCATE adminus_ip_address_range;" > /dev/null
 then
 	LogErrorVerbose "Problem pri vypinani kontroly cizich klicu, nebo mazani obsahu tabulky adminus_ip_address_range v mysql databazi: ($mysqlDatabase)"
+	MailSend
 	exit 6
 fi
 
@@ -277,6 +283,7 @@ ORDER BY groupId;" | grep -v "groupid,groupname,groupssid\|rows"\
 	| mysql --defaults-extra-file="$mysqlDefaultsFile" "$mysqlDatabase" > /dev/null
 then
 	LogErrorVerbose "Problem pri nacitani pripojnych bodu z postgresql databaze: ($psqlDatabase), nebo jejich uprave, nebo pri vkladani do mysql databaze: ($mysqlDatabase) do tabulky: adminustlapnetshaping_shape_group"
+	MailSend
 	exit 7
 fi
 
@@ -301,12 +308,14 @@ ORDER BY groupId;" | grep\
 	-e "s/, $/;/g" >> get_range.dump
 then
 	LogErrorVerbose "Problem pri nacitani subnetu pripojnych bodu z postgresql databaze: ($psqlDatabase), nebo jejich uprave, nebo pri priprave na vkladani do mysql databaze: ($mysqlDatabase) do tabulky: adminus_ip_address_range"
+	MailSend
 	exit 8
 fi
 
 if ! mysql --defaults-extra-file="$mysqlDefaultsFile" "$mysqlDatabase" < get_range.dump > /dev/null
 then
 	LogErrorVerbose "Problem pri vkladani pripravenych subnetu pripojnych bodu do mysql databaze: ($mysqlDatabase) do tabulky: adminus_ip_address_range"
+	MailSend
 	exit 9
 fi
 
@@ -314,6 +323,7 @@ fi
 if ! echo "ALTER TABLE adminustlapnetshaping_shape_group AUTO_INCREMENT = $(mysql --defaults-extra-file="$mysqlDefaultsFile" "$mysqlDatabase" --silent -e "SELECT MAX(id) + 1 FROM adminustlapnetshaping_shape_group;" | grep -v "MAX")" | mysql --defaults-extra-file="$mysqlDefaultsFile" "$mysqlDatabase"
 then
 	LogErrorVerbose "Problem pri korekci autoincrementu tabulky adminustlapnetshaping_shape_group v mysql databazi: ($mysqlDatabase)"
+	MailSend
 	exit 10
 fi
 
@@ -331,6 +341,7 @@ INNER JOIN (
 ON d.id = c.contract_id
 SET m_adminustlapnetshaping_shape_group_id = c.shape_group_id;" > /dev/null
 then
+	MailSend
 	exit 11
 fi
 
