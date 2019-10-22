@@ -160,24 +160,24 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-132
+133
 normal! zo
-143
+144
 normal! zo
-178
+179
 normal! zo
-210
+211
 normal! zo
-212
+213
 normal! zo
-231
+232
 normal! zo
-let s:l = 104 - ((55 * winheight(0) + 32) / 65)
+let s:l = 149 - ((32 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-104
-normal! 015|
+149
+normal! 053|
 wincmd w
 argglobal
 edit Changelog
@@ -629,7 +629,7 @@ normal! 056|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
-tabnext 5
+tabnext 4
 set stal=1
 if exists('s:wipebuf')
   silent exe 'bwipe ' . s:wipebuf

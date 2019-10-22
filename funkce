@@ -105,6 +105,7 @@ LogErrorVerbose(){
 	#provede ERROR zapis predaneho parametru do logu s nazvnem scriptu v (/var/log/scripty)
 	echo "$(date '+%b %d %T') $HOSTNAME $scriptName:(Error)[$$]: $1" >> "$logFile"
 	echo  -e "\e[1;91m $(date '+%b %d %T') $HOSTNAME $scriptName:(Error)[$$]: $1 \e[0m"
+	touch "$errorFile"
 } 
 
 #_RvLog
@@ -145,7 +146,7 @@ MailSend(){
 		# pokud jsou pro script definovany mailove notifikace
 		if [ -n "$mailNotification" ]
 		then
-			cat "$logFile" | grep "$scriptName" | mail -s "ERROR - ($scriptName) - ($HOSTNAME)" "$mailNotification"
+			cat "$logFile" | grep "$scriptName" | /usr/bin/mail -s "ERROR - ($scriptName) - ($HOSTNAME)" "$mailNotification"
 		fi
 
 		return 11
