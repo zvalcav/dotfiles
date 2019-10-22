@@ -3,5 +3,6 @@
 	weekly
 	compress
 	missingok
+	create 664 root adm
 	rotate 7
 }	
