@@ -273,8 +273,8 @@ ON b.id = f.nms_device_interface_id
 LEFT JOIN nms_antenna AS g
 ON f.nms_port_id = g.nms_port_id
 
-WHERE (i.nms_device_interface_id IN (2629, 3547, 6182) AND g.ssid IS NOT NULL)
-OR (i.nms_device_interface_id NOT IN (2629, 3547, 6182))
+WHERE (i.nms_device_interface_id IN (2629, 3547, 6182, 3782) AND g.ssid IS NOT NULL)
+OR (i.nms_device_interface_id NOT IN (2629, 3547, 6182, 3782))
 GROUP BY groupId, groupName, groupSSID
 ORDER BY groupId;" | grep -v "groupid,groupname,groupssid\|rows"\
 	| sed -e "s/,/','/g" -e "s/^/('/g" -e "s/$/'),/g" | tr '\n' ' '\

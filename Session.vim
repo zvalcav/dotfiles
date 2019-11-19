@@ -8,19 +8,19 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 set shortmess=aoO
-badd +1 backup
-badd +1 check-server
+badd +11 backup
+badd +5 check-server
 badd +1 debug
-badd +1 funkce
-badd +1 initialize
-badd +1 mysql-backup
+badd +149 funkce
+badd +18 initialize
+badd +202 mysql-backup
 badd +25 postgresql-backup
-badd +1 rsync-backup
-badd +1 server-backup
-badd +1 server-rsync-backup
-badd +1 zabbix-backup
+badd +26 rsync-backup
+badd +30 server-backup
+badd +5 server-rsync-backup
+badd +19 zabbix-backup
 badd +8 Changelog
-badd +1 get_groups.sh
+badd +350 get_groups.sh
 argglobal
 silent! argdel *
 set stal=2
