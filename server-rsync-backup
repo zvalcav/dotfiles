@@ -4,7 +4,7 @@
 
 VERSION_MAJOR=1
 VERSION_MINOR=0
-VERSION_PATCH=0
+VERSION_PATCH=1
 VERSION="$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH"
 
 #LIST
@@ -128,7 +128,8 @@ Log "Zacatek zalohovani"
 #pokud je nastavena promena s uzivatelem, pak se bude vuci serveru autentifikovat
 #verbose vystup zalohovanych souboru je v /var/log/server-rsync-backup.log
 Log "rsync s overenim uzivatele -> [$rsyncTarget]"
-rsync -rlt --delete --bwlimit=50M /var/backup/* "$rsyncTarget" > "$logDir/${scriptName}.log"
+rsync -e "ssh -o StrictHostKeyChecking=no"\
+	-rlt --delete --bwlimit=50M /var/backup/* "$rsyncTarget" > "$logDir/${scriptName}.log"
 RvLog "dokoncen rsync -> [$rsyncUser@$rsyncTarget]"
 rv="$?"
 
