@@ -128,7 +128,7 @@ Log "Zacatek zalohovani"
 #pokud je nastavena promena s uzivatelem, pak se bude vuci serveru autentifikovat
 #verbose vystup zalohovanych souboru je v /var/log/server-rsync-backup.log
 Log "rsync s overenim uzivatele -> [$rsyncTarget]"
-rsync -e "ssh -o StrictHostKeyChecking=no"\
+rsync -e "ssh -o StrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null"\
 	-rlt --delete --bwlimit=50M /var/backup/* "$rsyncTarget" > "$logDir/${scriptName}.log"
 RvLog "dokoncen rsync -> [$rsyncUser@$rsyncTarget]"
 rv="$?"

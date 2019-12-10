@@ -15,8 +15,8 @@ badd +1 funkce
 badd +1 initialize
 badd +1 mysql-backup
 badd +25 postgresql-backup
-badd +1 rsync-backup
-badd +1 server-backup
+badd +8 rsync-backup
+badd +30 server-backup
 badd +1 server-rsync-backup
 badd +1 zabbix-backup
 badd +8 Changelog
@@ -474,12 +474,12 @@ normal! zo
 normal! zo
 357
 normal! zo
-let s:l = 8 - ((7 * winheight(0) + 32) / 64)
+let s:l = 317 - ((0 * winheight(0) + 32) / 64)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-8
-normal! 015|
+317
+normal! 051|
 wincmd w
 argglobal
 edit Changelog
@@ -491,7 +491,7 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 29 - ((28 * winheight(0) + 32) / 64)
+let s:l = 29 - ((7 * winheight(0) + 32) / 64)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -568,12 +568,12 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 7 - ((6 * winheight(0) + 32) / 64)
+let s:l = 131 - ((37 * winheight(0) + 32) / 64)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-7
-normal! 015|
+131
+normal! 072|
 wincmd w
 argglobal
 edit Changelog
@@ -641,7 +641,7 @@ normal! 056|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
-tabnext 9
+tabnext 11
 set stal=1
 if exists('s:wipebuf')
   silent exe 'bwipe ' . s:wipebuf

@@ -314,7 +314,7 @@ do
 				CheckDir "$archiveDir"
 				TestDir "$backupItem"
 				echo -e "\n##########$(date) - $backupItem" >> "$archiveList"		#zapise datum do souboru $archiveList
-				rsync -e "ssh -o StrictHostKeyChecking=no" "$rsyncOptions" --delete --bwlimit=32000 --backup --backup-dir="$archiveDir" "$backupItem" "$backupDir" >> "$archiveList"
+				rsync -e "ssh -o StrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null" "$rsyncOptions" --delete --bwlimit=32000 --backup --backup-dir="$archiveDir" "$backupItem" "$backupDir" >> "$archiveList"
 				RvLog "rsync - ($rsyncMode) - ($backupMode) - ($backupItem) do ($backupDir) dobehl"
 
 			#spusteni rsyncu v backup modu hardlink
@@ -323,7 +323,7 @@ do
 				RvLog "rsync - ($rsyncMode) - ($backupMode) - spusteni zalohy ($backupItem) do ($backupDir)"
 				TestDir "$backupItem"
 				echo -e "\n##########$(date) - $backupItem" >> "$rsyncList"		#zapise datum do souboru $rsyncList
-				rsync -e "ssh -o StrictHostKeyChecking=no" "$rsyncOptions" --delete --bwlimit=32000 "$backupItem" "$backupDir" >> "$rsyncList"
+				rsync -e "ssh -o StrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null" "$rsyncOptions" --delete --bwlimit=32000 "$backupItem" "$backupDir" >> "$rsyncList"
 				RvLog "rsync - ($rsyncMode) - ($backupMode) - ($backupItem) do ($backupDir) dobehl"
 			fi
 			;;
@@ -338,7 +338,7 @@ do
 				CheckDir "$archiveDir"
 				TestDir "${nfsMountPoint}$backupItem"
 				echo -e "\n##########$(date) - $backupItem" >> "$archiveList"		#zapise datum do souboru $archiveList
-				rsync -e "ssh -o StrictHostKeyChecking=no" "$rsyncOptions" --delete --bwlimit=32000 --backup --backup-dir="$archiveDir" "${nfsMountPoint}$backupItem" "$backupDir" >> "$archiveList"
+				rsync -e "ssh -o StrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null" "$rsyncOptions" --delete --bwlimit=32000 --backup --backup-dir="$archiveDir" "${nfsMountPoint}$backupItem" "$backupDir" >> "$archiveList"
 				RvLog "rsync - ($rsyncMode) - ($backupMode) - (${nfsMountPoint}$backupItem) do ($backupDir) dobehl"
 
 			#spusteni rsyncu v backup modu hardlink
@@ -347,7 +347,7 @@ do
 				RvLog "rsync - ($rsyncMode) - ($backupMode) - spusteni zalohy (${nfsMountPoint}$backupItem) do ($backupDir)"
 				TestDir "${nfsMountPoint}$backupItem"
 				echo -e "\n##########$(date) - $backupItem" >> "$rsyncList"		#zapise datum do souboru $rsyncList
-				rsync -e "ssh -o StrictHostKeyChecking=no" "$rsyncOptions" --delete --bwlimit=32000 "${nfsMountPoint}$backupItem" "$backupDir" >> "$rsyncList"
+				rsync -e "ssh -o StrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null" "$rsyncOptions" --delete --bwlimit=32000 "${nfsMountPoint}$backupItem" "$backupDir" >> "$rsyncList"
 				RvLog "rsync - ($rsyncMode) - ($backupMode) - (${nfsMountPoint}$backupItem) do ($backupDir) dobehl"
 			fi
 			;;
@@ -362,7 +362,7 @@ do
 				CheckDir "$archiveDir"
 				TestDir "$backupItem"
 				echo -e "\n##########$(date) - $backupItem" >> "$archiveList"		#zapise datum do souboru $archiveList
-				rsync -e "ssh -o StrictHostKeyChecking=no" "$rsyncOptions" --delete --bwlimit=32000 --backup --backup-dir="$archiveDir" "$backupItem" "$backupDir" >> "$archiveList"
+				rsync -e "ssh -o StrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null" "$rsyncOptions" --delete --bwlimit=32000 --backup --backup-dir="$archiveDir" "$backupItem" "$backupDir" >> "$archiveList"
 				RvLog "rsync - ($rsyncMode) - ($backupMode) - ($backupItem) do ($backupDir) dobehl"
 
 			#spusteni rsyncu v backup modu hardlink
@@ -371,7 +371,7 @@ do
 				RvLog "rsync - ($rsyncMode) - ($backupMode) - spusteni zalohy ($backupItem) do ($backupDir)"
 				TestDir "$backupItem"
 				echo -e "\n##########$(date) - $backupItem" >> "$rsyncList"		#zapise datum do souboru $rsyncList
-				rsync -e "ssh -o StrictHostKeyChecking=no" "$rsyncOptions" --delete --bwlimit=32000 "$backupItem" "$backupDir" >> "$rsyncList"
+				rsync -e "ssh -o StrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null" "$rsyncOptions" --delete --bwlimit=32000 "$backupItem" "$backupDir" >> "$rsyncList"
 				RvLog "rsync - ($rsyncMode) - ($backupMode) - ($backupItem) do ($backupDir) dobehl"
 			fi
 			;;
