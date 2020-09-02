@@ -4,7 +4,7 @@
 
 VERSION_MAJOR=1
 VERSION_MINOR=0
-VERSION_PATCH=0
+VERSION_PATCH=2
 VERSION="$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH"
 
 #LIST
@@ -209,7 +209,7 @@ do
 	#-F flush-logs
 	#--routines - dumpuje i funkce, rutiny a dalsi chujoviny
 	mysqldump --defaults-extra-file="$mysqlDefaultsFile" "$database"\
-			  -e -F --routines --events --add-locks -r "$backupPath/${backupName}.sql" > /dev/null
+			  -e -F --routines --events --add-locks -r "$backupPath/${backupName}.sql"
 	RvLog "Vytvoren mysqldump databaze s nazvem ($backupPath/${backupName}.sql)"
 
 	if [ "$?" -eq 0 ] && cd "$backupPath"
@@ -225,14 +225,28 @@ do
 		mysqldump --defaults-extra-file="$mysqlDefaultsFile" "$database"\
 			--master-data=1 --ignore-table=radius.radacct --ignore-table=radius.radpostauth \
 			--ignore-table=radius.pwd_history --ignore-table=radius.mail_notification \
-			-F --routines --events --add-locks -r "$backupPath/slave-${backupName}.sql" > /dev/null
-		RvLog "Vytvoren mysqldump databaze s nazvem ($backupPath/slave-${backupName}.sql)"
+			-F --routines --events --add-locks -r "$backupPath/slave-${backupName}.sql"
 
 		if [ "$?" -eq 0 ] && cd "$backupPath"
 		then
+			Log "Vytvoren mysqldump databaze s nazvem ($backupPath/slave-${backupName}.sql)"
 			#-T otestuje archiv a --move po uspesnem testu soubor smaze
 			zip -T -m "slave-${backupName}.zip" "slave-${backupName}.sql" > /dev/null
 			RvLog "mysqldump uspesne zkomprimovan (slave-${backupName}.zip)"
+		# pri neuspechu se nejspis jedna o slave stranu a tudiz je potreba vynechat zapis master data
+		else
+			mysqldump --defaults-extra-file="$mysqlDefaultsFile" "$database"\
+				--ignore-table=radius.radacct --ignore-table=radius.radpostauth \
+				--ignore-table=radius.pwd_history --ignore-table=radius.mail_notification \
+				-F --routines --events --add-locks -r "$backupPath/slave-${backupName}.sql"
+			RvLog "Vytvoren mysqldump databaze s nazvem ($backupPath/slave-${backupName}.sql)"
+
+			if [ "$?" -eq 0 ] && cd "$backupPath"
+			then
+				#-T otestuje archiv a --move po uspesnem testu soubor smaze
+				zip -T -m "slave-${backupName}.zip" "slave-${backupName}.sql" > /dev/null
+				RvLog "mysqldump uspesne zkomprimovan (slave-${backupName}.zip)"
+			fi
 		fi
 	fi
 

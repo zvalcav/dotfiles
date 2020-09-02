@@ -3,27 +3,27 @@ if &cp | set nocp | endif
 let s:so_save = &so | let s:siso_save = &siso | set so=0 siso=0
 let v:this_session=expand("<sfile>:p")
 silent only
-cd ~/Tlapnet/bash-scripts
+silent tabonly
+exe "cd " . escape(expand("<sfile>:p:h"), ' ')
 if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 set shortmess=aoO
-badd +1 backup
-badd +1 check-server
-badd +1 debug
-badd +1 funkce
-badd +1 initialize
-badd +1 mysql-backup
-badd +25 postgresql-backup
-badd +8 rsync-backup
-badd +30 server-backup
-badd +1 server-rsync-backup
-badd +1 zabbix-backup
-badd +8 Changelog
-badd +1 get_groups.sh
 argglobal
-silent! argdel *
+%argdel
 set stal=2
+tabnew
+tabnew
+tabnew
+tabnew
+tabnew
+tabnew
+tabnew
+tabnew
+tabnew
+tabnew
+tabnew
+tabrewind
 edit backup
 set splitbelow splitright
 wincmd _ | wincmd |
@@ -33,19 +33,14 @@ wincmd w
 set nosplitbelow
 set nosplitright
 wincmd t
-set winheight=1 winwidth=1
+set winminheight=0
+set winheight=1
+set winminwidth=0
+set winwidth=1
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
 argglobal
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-let s:l = 11 - ((10 * winheight(0) + 32) / 64)
+let s:l = 11 - ((9 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -53,25 +48,18 @@ normal! zt
 normal! 0
 wincmd w
 argglobal
-edit Changelog
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-let s:l = 16 - ((13 * winheight(0) + 32) / 64)
+if bufexists("Changelog") | buffer Changelog | else | edit Changelog | endif
+let s:l = 18 - ((14 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-16
+18
 normal! 0
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
-tabedit check-server
+tabnext
+edit check-server
 set splitbelow splitright
 wincmd _ | wincmd |
 vsplit
@@ -80,19 +68,14 @@ wincmd w
 set nosplitbelow
 set nosplitright
 wincmd t
-set winheight=1 winwidth=1
+set winminheight=0
+set winheight=1
+set winminwidth=0
+set winwidth=1
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
 argglobal
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-let s:l = 5 - ((4 * winheight(0) + 32) / 64)
+let s:l = 5 - ((4 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -100,46 +83,35 @@ normal! zt
 normal! 0
 wincmd w
 argglobal
-edit Changelog
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-let s:l = 16 - ((13 * winheight(0) + 32) / 64)
+if bufexists("Changelog") | buffer Changelog | else | edit Changelog | endif
+let s:l = 18 - ((14 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-16
+18
 normal! 0
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
-tabedit debug
+tabnext
+edit debug
 set splitbelow splitright
 set nosplitbelow
 set nosplitright
 wincmd t
-set winheight=1 winwidth=1
+set winminheight=0
+set winheight=1
+set winminwidth=0
+set winwidth=1
 argglobal
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-let s:l = 1 - ((0 * winheight(0) + 32) / 64)
+let s:l = 1 - ((0 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 1
 normal! 0
-tabedit funkce
+tabnext
+edit funkce
 set splitbelow splitright
 wincmd _ | wincmd |
 vsplit
@@ -148,31 +120,14 @@ wincmd w
 set nosplitbelow
 set nosplitright
 wincmd t
-set winheight=1 winwidth=1
+set winminheight=0
+set winheight=1
+set winminwidth=0
+set winwidth=1
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
 argglobal
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-133
-normal! zo
-144
-normal! zo
-179
-normal! zo
-211
-normal! zo
-213
-normal! zo
-232
-normal! zo
-let s:l = 149 - ((32 * winheight(0) + 32) / 64)
+let s:l = 149 - ((29 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -180,16 +135,8 @@ normal! zt
 normal! 053|
 wincmd w
 argglobal
-edit Changelog
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-let s:l = 12 - ((9 * winheight(0) + 32) / 64)
+if bufexists("Changelog") | buffer Changelog | else | edit Changelog | endif
+let s:l = 12 - ((8 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -198,7 +145,8 @@ normal! 0
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
-tabedit get_groups.sh
+tabnext
+edit get_groups.sh
 set splitbelow splitright
 wincmd _ | wincmd |
 vsplit
@@ -207,25 +155,14 @@ wincmd w
 set nosplitbelow
 set nosplitright
 wincmd t
-set winheight=1 winwidth=1
+set winminheight=0
+set winheight=1
+set winminwidth=0
+set winwidth=1
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
 argglobal
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-73
-normal! zo
-85
-normal! zo
-97
-normal! zo
-let s:l = 350 - ((58 * winheight(0) + 32) / 64)
+let s:l = 350 - ((51 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -233,16 +170,8 @@ normal! zt
 normal! 0
 wincmd w
 argglobal
-edit Changelog
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-let s:l = 8 - ((7 * winheight(0) + 32) / 64)
+if bufexists("Changelog") | buffer Changelog | else | edit Changelog | endif
+let s:l = 8 - ((6 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -251,7 +180,8 @@ normal! 057|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
-tabedit initialize
+tabnext
+edit initialize
 set splitbelow splitright
 wincmd _ | wincmd |
 vsplit
@@ -264,22 +194,17 @@ wincmd w
 set nosplitbelow
 set nosplitright
 wincmd t
-set winheight=1 winwidth=1
+set winminheight=0
+set winheight=1
+set winminwidth=0
+set winwidth=1
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
-exe '2resize ' . ((&lines * 31 + 33) / 67)
+exe '2resize ' . ((&lines * 27 + 30) / 60)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
-exe '3resize ' . ((&lines * 32 + 33) / 67)
+exe '3resize ' . ((&lines * 29 + 30) / 60)
 exe 'vert 3resize ' . ((&columns * 119 + 119) / 239)
 argglobal
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-let s:l = 18 - ((17 * winheight(0) + 32) / 64)
+let s:l = 18 - ((15 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -287,16 +212,8 @@ normal! zt
 normal! 0
 wincmd w
 argglobal
-edit Changelog
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-let s:l = 11 - ((8 * winheight(0) + 15) / 31)
+if bufexists("Changelog") | buffer Changelog | else | edit Changelog | endif
+let s:l = 11 - ((7 * winheight(0) + 13) / 27)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -304,18 +221,8 @@ normal! zt
 normal! 029|
 wincmd w
 argglobal
-edit postgresql-backup
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-139
-normal! zo
-let s:l = 5 - ((4 * winheight(0) + 16) / 32)
+if bufexists("postgresql-backup") | buffer postgresql-backup | else | edit postgresql-backup | endif
+let s:l = 5 - ((4 * winheight(0) + 14) / 29)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -323,11 +230,12 @@ normal! zt
 normal! 0
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
-exe '2resize ' . ((&lines * 31 + 33) / 67)
+exe '2resize ' . ((&lines * 27 + 30) / 60)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
-exe '3resize ' . ((&lines * 32 + 33) / 67)
+exe '3resize ' . ((&lines * 29 + 30) / 60)
 exe 'vert 3resize ' . ((&columns * 119 + 119) / 239)
-tabedit mysql-backup
+tabnext
+edit mysql-backup
 set splitbelow splitright
 wincmd _ | wincmd |
 vsplit
@@ -336,51 +244,33 @@ wincmd w
 set nosplitbelow
 set nosplitright
 wincmd t
-set winheight=1 winwidth=1
+set winminheight=0
+set winheight=1
+set winminwidth=0
+set winwidth=1
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
 argglobal
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-65
-normal! zo
-204
-normal! zo
-225
-normal! zo
-let s:l = 202 - ((63 * winheight(0) + 32) / 64)
+let s:l = 7 - ((6 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-202
-normal! 0
+7
+normal! 015|
 wincmd w
 argglobal
-edit Changelog
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-let s:l = 14 - ((13 * winheight(0) + 32) / 64)
+if bufexists("Changelog") | buffer Changelog | else | edit Changelog | endif
+let s:l = 15 - ((13 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-14
-normal! 0
+15
+normal! 07|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
-tabedit postgresql-backup
+tabnext
+edit postgresql-backup
 set splitbelow splitright
 wincmd _ | wincmd |
 vsplit
@@ -389,31 +279,14 @@ wincmd w
 set nosplitbelow
 set nosplitright
 wincmd t
-set winheight=1 winwidth=1
+set winminheight=0
+set winheight=1
+set winminwidth=0
+set winwidth=1
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
 argglobal
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-117
-normal! zo
-118
-normal! zo
-118
-normal! zo
-118
-normal! zo
-118
-normal! zo
-139
-normal! zo
-let s:l = 191 - ((54 * winheight(0) + 32) / 64)
+let s:l = 191 - ((48 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -421,25 +294,18 @@ normal! zt
 normal! 051|
 wincmd w
 argglobal
-edit Changelog
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-let s:l = 18 - ((7 * winheight(0) + 32) / 64)
+if bufexists("Changelog") | buffer Changelog | else | edit Changelog | endif
+let s:l = 20 - ((8 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-18
+20
 normal! 068|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
-tabedit rsync-backup
+tabnext
+edit rsync-backup
 set splitbelow splitright
 wincmd _ | wincmd |
 vsplit
@@ -448,33 +314,14 @@ wincmd w
 set nosplitbelow
 set nosplitright
 wincmd t
-set winheight=1 winwidth=1
+set winminheight=0
+set winheight=1
+set winminwidth=0
+set winwidth=1
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
 argglobal
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-76
-normal! zo
-135
-normal! zo
-305
-normal! zo
-308
-normal! zo
-309
-normal! zo
-333
-normal! zo
-357
-normal! zo
-let s:l = 317 - ((0 * winheight(0) + 32) / 64)
+let s:l = 317 - ((0 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -482,25 +329,18 @@ normal! zt
 normal! 051|
 wincmd w
 argglobal
-edit Changelog
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-let s:l = 29 - ((7 * winheight(0) + 32) / 64)
+if bufexists("Changelog") | buffer Changelog | else | edit Changelog | endif
+let s:l = 31 - ((6 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-29
+31
 normal! 044|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
-tabedit server-backup
+tabnext
+edit server-backup
 set splitbelow splitright
 wincmd _ | wincmd |
 vsplit
@@ -509,19 +349,14 @@ wincmd w
 set nosplitbelow
 set nosplitright
 wincmd t
-set winheight=1 winwidth=1
+set winminheight=0
+set winheight=1
+set winminwidth=0
+set winwidth=1
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
 argglobal
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-let s:l = 30 - ((29 * winheight(0) + 32) / 64)
+let s:l = 30 - ((26 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -529,25 +364,18 @@ normal! zt
 normal! 0
 wincmd w
 argglobal
-edit Changelog
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-let s:l = 27 - ((26 * winheight(0) + 32) / 64)
+if bufexists("Changelog") | buffer Changelog | else | edit Changelog | endif
+let s:l = 29 - ((25 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-27
+29
 normal! 0
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
-tabedit server-rsync-backup
+tabnext
+edit server-rsync-backup
 set splitbelow splitright
 wincmd _ | wincmd |
 vsplit
@@ -556,19 +384,14 @@ wincmd w
 set nosplitbelow
 set nosplitright
 wincmd t
-set winheight=1 winwidth=1
+set winminheight=0
+set winheight=1
+set winminwidth=0
+set winwidth=1
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
 argglobal
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-let s:l = 131 - ((37 * winheight(0) + 32) / 64)
+let s:l = 131 - ((33 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -576,25 +399,18 @@ normal! zt
 normal! 072|
 wincmd w
 argglobal
-edit Changelog
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-let s:l = 30 - ((29 * winheight(0) + 32) / 64)
+if bufexists("Changelog") | buffer Changelog | else | edit Changelog | endif
+let s:l = 32 - ((28 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-30
+32
 normal! 029|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
-tabedit zabbix-backup
+tabnext
+edit zabbix-backup
 set splitbelow splitright
 wincmd _ | wincmd |
 vsplit
@@ -603,19 +419,14 @@ wincmd w
 set nosplitbelow
 set nosplitright
 wincmd t
-set winheight=1 winwidth=1
+set winminheight=0
+set winheight=1
+set winminwidth=0
+set winwidth=1
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
 argglobal
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-let s:l = 19 - ((18 * winheight(0) + 32) / 64)
+let s:l = 19 - ((16 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -623,31 +434,37 @@ normal! zt
 normal! 0
 wincmd w
 argglobal
-edit Changelog
-setlocal fdm=indent
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=99
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-let s:l = 33 - ((30 * winheight(0) + 32) / 64)
+if bufexists("Changelog") | buffer Changelog | else | edit Changelog | endif
+let s:l = 35 - ((29 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-33
+35
 normal! 056|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
-tabnext 11
+tabnext 7
 set stal=1
-if exists('s:wipebuf')
+badd +1 backup
+badd +1 check-server
+badd +1 debug
+badd +1 funkce
+badd +1 initialize
+badd +1 mysql-backup
+badd +25 postgresql-backup
+badd +1 rsync-backup
+badd +1 server-backup
+badd +1 server-rsync-backup
+badd +1 zabbix-backup
+badd +8 Changelog
+badd +1 get_groups.sh
+if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0
   silent exe 'bwipe ' . s:wipebuf
 endif
 unlet! s:wipebuf
 set winheight=1 winwidth=20 shortmess=filnxtToOc
+set winminheight=1 winminwidth=1
 let s:sx = expand("<sfile>:p:r")."x.vim"
 if file_readable(s:sx)
   exe "source " . fnameescape(s:sx)
