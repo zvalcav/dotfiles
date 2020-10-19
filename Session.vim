@@ -331,12 +331,12 @@ normal! 015|
 wincmd w
 argglobal
 if bufexists("Changelog") | buffer Changelog | else | edit Changelog | endif
-let s:l = 24 - ((23 * winheight(0) + 28) / 57)
+let s:l = 24 - ((22 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 24
-normal! 030|
+normal! 034|
 wincmd w
 2wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
@@ -367,11 +367,11 @@ normal! 014|
 wincmd w
 argglobal
 if bufexists("Changelog") | buffer Changelog | else | edit Changelog | endif
-let s:l = 37 - ((6 * winheight(0) + 28) / 57)
+let s:l = 38 - ((6 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-37
+38
 normal! 044|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
@@ -402,11 +402,11 @@ normal! 08|
 wincmd w
 argglobal
 if bufexists("Changelog") | buffer Changelog | else | edit Changelog | endif
-let s:l = 35 - ((31 * winheight(0) + 28) / 57)
+let s:l = 36 - ((32 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-35
+36
 normal! 0
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
@@ -437,11 +437,11 @@ normal! 06|
 wincmd w
 argglobal
 if bufexists("Changelog") | buffer Changelog | else | edit Changelog | endif
-let s:l = 38 - ((34 * winheight(0) + 28) / 57)
+let s:l = 39 - ((35 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-38
+39
 normal! 029|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
@@ -472,11 +472,11 @@ normal! 012|
 wincmd w
 argglobal
 if bufexists("Changelog") | buffer Changelog | else | edit Changelog | endif
-let s:l = 41 - ((35 * winheight(0) + 28) / 57)
+let s:l = 42 - ((36 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-41
+42
 normal! 056|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
@@ -489,13 +489,13 @@ badd +1 debug
 badd +1 funkce
 badd +1 get_groups.sh
 badd +1 initialize
-badd +1 mysql-backup
-badd +126 rpz_unbound
+badd +105 mysql-backup
+badd +87 rpz_unbound
 badd +1 rsync-backup
 badd +1 server-backup
 badd +1 server-rsync-backup
 badd +206 zabbix-backup
-badd +40 Changelog
+badd +1 Changelog
 badd +25 postgresql-backup
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0
   silent exe 'bwipe ' . s:wipebuf
