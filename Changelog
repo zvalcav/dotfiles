@@ -21,6 +21,7 @@ masteru
 1.0.1 - doplnen dump databaze zabbixu s vynechanim tabulek partitions.*
 
 # rpz_backup
+1.0.2 - presmerovani vystupu unbound-checkconf na /dev/null
 1.0.1 - doplnena podminka pro gzip puvodniho configu
 1.0.0 - vychozi verze scriptu, doplnena o logovani a funkce
 

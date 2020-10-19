@@ -322,12 +322,12 @@ set winwidth=1
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
 argglobal
-let s:l = 9 - ((8 * winheight(0) + 28) / 57)
+let s:l = 138 - ((56 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-9
-normal! 015|
+138
+normal! 0
 wincmd w
 argglobal
 if bufexists("Changelog") | buffer Changelog | else | edit Changelog | endif
@@ -336,8 +336,9 @@ if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 24
-normal! 052|
+normal! 059|
 wincmd w
+2wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
 exe 'vert 2resize ' . ((&columns * 119 + 119) / 239)
 tabnext
@@ -366,11 +367,11 @@ normal! 014|
 wincmd w
 argglobal
 if bufexists("Changelog") | buffer Changelog | else | edit Changelog | endif
-let s:l = 35 - ((6 * winheight(0) + 28) / 57)
+let s:l = 36 - ((6 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-35
+36
 normal! 044|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
@@ -401,11 +402,11 @@ normal! 08|
 wincmd w
 argglobal
 if bufexists("Changelog") | buffer Changelog | else | edit Changelog | endif
-let s:l = 33 - ((29 * winheight(0) + 28) / 57)
+let s:l = 34 - ((30 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-33
+34
 normal! 0
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
@@ -436,11 +437,11 @@ normal! 06|
 wincmd w
 argglobal
 if bufexists("Changelog") | buffer Changelog | else | edit Changelog | endif
-let s:l = 36 - ((32 * winheight(0) + 28) / 57)
+let s:l = 37 - ((33 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-36
+37
 normal! 029|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
@@ -471,11 +472,11 @@ normal! 012|
 wincmd w
 argglobal
 if bufexists("Changelog") | buffer Changelog | else | edit Changelog | endif
-let s:l = 39 - ((33 * winheight(0) + 28) / 57)
+let s:l = 40 - ((34 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-39
+40
 normal! 056|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 119 + 119) / 239)
@@ -489,7 +490,7 @@ badd +1 funkce
 badd +1 get_groups.sh
 badd +1 initialize
 badd +1 mysql-backup
-badd +3 rpz_unbound
+badd +126 rpz_unbound
 badd +1 rsync-backup
 badd +1 server-backup
 badd +1 server-rsync-backup

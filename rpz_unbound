@@ -6,7 +6,7 @@
 
 VERSION_MAJOR=1
 VERSION_MINOR=0
-VERSION_PATCH=1
+VERSION_PATCH=2
 VERSION="$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH"
 
 # pri predani parametru -x provede zapnuti debug logu
@@ -115,7 +115,7 @@ then
 	RvLog "Zaloha puvodniho configu"
 fi
 
-unbound-checkconf
+unbound-checkconf > /dev/null
 RvLog "Provedena kontrola spravnosti noveho configu"
 
 if [ "$?" -eq 0 ]
