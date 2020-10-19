@@ -20,6 +20,9 @@ masteru
 1.0.2 - doplneno baleni male zalohy a komentovani radku s extensions
 1.0.1 - doplnen dump databaze zabbixu s vynechanim tabulek partitions.*
 
+# rpz_backup
+1.0.0 - vychozi verze scriptu, doplnena o logovani a funkce
+
 # rsync-backup
 1.0.1 - doplneno vynechani kontrol ssh klice
 1.0.0 - vychozi verze scriptu

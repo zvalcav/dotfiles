@@ -1,0 +1,135 @@
+#!/bin/bash
+# script pro tvorbu RPZ zon - rozsirena verze originalu
+# https://gist.github.com/oskar456/e949ae890f2f20c8395b70b1354c4fcc
+
+#LIST _PROMENNE _LOGOVANI _FUNCTIONS _GENERATE _CHECK
+
+VERSION_MAJOR=1
+VERSION_MINOR=0
+VERSION_PATCH=0
+VERSION="$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH"
+
+# pri predani parametru -x provede zapnuti debug logu
+if [ "$1" = "-x" ]
+then
+	set -x
+fi
+
+# vypsani verze
+if [ "$1" = "-V" -o "$1" = "--version" ]
+then
+	echo "$VERSION"
+	exit 0
+fi
+
+#_PROMENNE
+scriptName="rpz_unbound"
+
+#cesta ke scriptu
+scriptDir="/usr/local/bash-scripts"
+verbose=0
+deBug=0
+
+RPZ_ZONE="rpz.cesnet.cz"
+RPZ_SERVER="nsa.cesnet.cz"
+NEW_OUTPUT_FILE="/etc/unbound/unbound.conf.d/test_unbound_$RPZ_ZONE.conf"
+FINAL_ZONE_FILE="/etc/unbound/unbound.conf.d/unbound_$RPZ_ZONE.conf"
+
+#_LOGOVANI
+
+#nacteni definice funkci Log,LogError,RvLog,MailSend z knihovny
+. $scriptDir/funkce	
+Log "script ($scriptName) - zacatek"
+echo "$$" > "$startFile"
+Log "($startFile) set to ($$)"
+
+
+#zapise konfiguracni soubor, ze ktereho bude nasledne nacitat hodnoty
+write(){
+	if [ -f "$configFile" ]
+	then
+	cp "$configFile" "${configFile}.back"
+	RvLog "provedena zaloha konfigurace do (${configFile}.back)"
+	fi	
+	{
+	echo "disabled=1	#vypne/zapne (1/0) provadeni scriptu"
+	} > "$configFile"
+	LogError "zapsan konfiguracni soubor pro server ($HOSTNAME)"
+}
+
+#nacteni $configFile, pripadne zapsani defaultniho
+if [ -f "$configFile" ]
+then
+	. "$configFile"
+	Log "nacten konfiguracni soubor ($configFile)"
+else
+	write
+	. "$configFile"
+fi
+
+#nastavenim disabled na 1 se vypne spousteni scriptu, uprav $configFile, mail se neposila
+if [ "$disabled" -eq 1 ]
+then
+	Log "script ($scriptName) byl disablovan v konfiguracnim souboru ($configFile)"
+	exit 1
+fi
+
+# _FUNCTIONS
+function resolve_target() {
+        local domain="$1"
+        shift
+        local target=$@
+        dig +noauthority +noadditional +noquestion $target | sed -rn 's_^.*(\s+IN\s+A(AAA)?\s+.*)$_'$domain'\1_p'
+}
+
+function get_local_data() {
+        while read domain target; do
+                if [[ "${target}" = "." ]]; then #just block - we do nothing
+                        echo -e "$domain\tIN\tCNAME\t$target"
+                else #try to resolve the target
+                        resolve_target "${domain}" "${target}" -t A
+                        resolve_target "${domain}" "${target}" -t AAAA
+                fi
+        done
+}
+
+# _GENERATE
+set -e
+rawrpz=$(dig -t axfr "$RPZ_ZONE" @"$RPZ_SERVER")
+RvLog "nacten seznam domen pomoci dig"
+rpz=$(sed -rn 's_^(.*)\.'"$RPZ_ZONE"'\.\s.*IN\s+CNAME\s+(.*)$_\1\t\2_p' <<<"$rawrpz")
+RvLog "upraven seznam domen pomoci sedu"
+local_data=$(get_local_data <<<"$rpz")
+RvLog "zpracovan seznam domen pomoci funkce get_local_data"
+
+echo "server:" > "${NEW_OUTPUT_FILE}"
+while read line; do
+        [[ -n "$line" ]] && \
+                echo -e "\tlocal-data: \"$line\"" >> "${NEW_OUTPUT_FILE}"
+done <<< "${local_data}"
+
+# _CHECK
+gzip "${FINAL_ZONE_FILE}"
+RvLog "Zaloha puvodniho configu"
+
+unbound-checkconf
+RvLog "Provedena kontrola spravnosti noveho configu"
+
+if [ "$?" -eq 0 ]
+then
+	mv "${NEW_OUTPUT_FILE}" "${FINAL_ZONE_FILE}"
+	RvLog "Presun noveho zone file po uspesne kontrole konfigurace"
+
+	systemctl reload unbound
+	RvLog "Proveden reload konfigurace unboundu"
+else
+	rm "${NEW_OUTPUT_FILE}"
+	RvLog "Odstranen novy, nepovedeny soubor"
+
+	gunzip "${FINAL_ZONE_FILE}"
+	RvLog "Rozbalen puvodni, funkcni soubor"
+fi
+
+MailSend
+Log "OK - aktualizace rpz zon dokoncena"
+exit 0
