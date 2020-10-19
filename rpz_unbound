@@ -6,7 +6,7 @@
 
 VERSION_MAJOR=1
 VERSION_MINOR=0
-VERSION_PATCH=2
+VERSION_PATCH=3
 VERSION="$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH"
 
 # pri predani parametru -x provede zapnuti debug logu
@@ -111,7 +111,7 @@ done <<< "${local_data}"
 # _CHECK
 if [ -f "${FINAL_ZONE_FILE}" ]
 then
-	gzip "${FINAL_ZONE_FILE}"
+	gzip -f "${FINAL_ZONE_FILE}"
 	RvLog "Zaloha puvodniho configu"
 fi
 
